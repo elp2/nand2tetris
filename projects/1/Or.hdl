@@ -10,5 +10,8 @@ CHIP Or {
     OUT out;
 
     PARTS:
-    //// Replace this comment with your code.
+    Not(in= a, out= na);
+    Not(in= b, out= nb);
+    And(a= na, b= nb, out= aab);
+    Not(in= aab, out= out);
 }
