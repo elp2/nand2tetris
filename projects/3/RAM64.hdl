@@ -12,5 +12,93 @@ CHIP RAM64 {
     OUT out[16];
 
     PARTS:
-    //// Replace this comment with your code.
+    // 64 8 bit registers.
+    RAM8(in= in, load= l00, address= address[0..2], out= r00);
+    RAM8(in= in, load= l01, address= address[0..2], out= r01);
+    RAM8(in= in, load= l02, address= address[0..2], out= r02);
+    RAM8(in= in, load= l03, address= address[0..2], out= r03);
+    RAM8(in= in, load= l04, address= address[0..2], out= r04);
+    RAM8(in= in, load= l05, address= address[0..2], out= r05);
+    RAM8(in= in, load= l06, address= address[0..2], out= r06);
+    RAM8(in= in, load= l07, address= address[0..2], out= r07);
+    RAM8(in= in, load= l10, address= address[0..2], out= r10);
+    RAM8(in= in, load= l11, address= address[0..2], out= r11);
+    RAM8(in= in, load= l12, address= address[0..2], out= r12);
+    RAM8(in= in, load= l13, address= address[0..2], out= r13);
+    RAM8(in= in, load= l14, address= address[0..2], out= r14);
+    RAM8(in= in, load= l15, address= address[0..2], out= r15);
+    RAM8(in= in, load= l16, address= address[0..2], out= r16);
+    RAM8(in= in, load= l17, address= address[0..2], out= r17);
+    RAM8(in= in, load= l20, address= address[0..2], out= r20);
+    RAM8(in= in, load= l21, address= address[0..2], out= r21);
+    RAM8(in= in, load= l22, address= address[0..2], out= r22);
+    RAM8(in= in, load= l23, address= address[0..2], out= r23);
+    RAM8(in= in, load= l24, address= address[0..2], out= r24);
+    RAM8(in= in, load= l25, address= address[0..2], out= r25);
+    RAM8(in= in, load= l26, address= address[0..2], out= r26);
+    RAM8(in= in, load= l27, address= address[0..2], out= r27);
+    RAM8(in= in, load= l30, address= address[0..2], out= r30);
+    RAM8(in= in, load= l31, address= address[0..2], out= r31);
+    RAM8(in= in, load= l32, address= address[0..2], out= r32);
+    RAM8(in= in, load= l33, address= address[0..2], out= r33);
+    RAM8(in= in, load= l34, address= address[0..2], out= r34);
+    RAM8(in= in, load= l35, address= address[0..2], out= r35);
+    RAM8(in= in, load= l36, address= address[0..2], out= r36);
+    RAM8(in= in, load= l37, address= address[0..2], out= r37);
+    RAM8(in= in, load= l40, address= address[0..2], out= r40);
+    RAM8(in= in, load= l41, address= address[0..2], out= r41);
+    RAM8(in= in, load= l42, address= address[0..2], out= r42);
+    RAM8(in= in, load= l43, address= address[0..2], out= r43);
+    RAM8(in= in, load= l44, address= address[0..2], out= r44);
+    RAM8(in= in, load= l45, address= address[0..2], out= r45);
+    RAM8(in= in, load= l46, address= address[0..2], out= r46);
+    RAM8(in= in, load= l47, address= address[0..2], out= r47);
+    RAM8(in= in, load= l50, address= address[0..2], out= r50);
+    RAM8(in= in, load= l51, address= address[0..2], out= r51);
+    RAM8(in= in, load= l52, address= address[0..2], out= r52);
+    RAM8(in= in, load= l53, address= address[0..2], out= r53);
+    RAM8(in= in, load= l54, address= address[0..2], out= r54);
+    RAM8(in= in, load= l55, address= address[0..2], out= r55);
+    RAM8(in= in, load= l56, address= address[0..2], out= r56);
+    RAM8(in= in, load= l57, address= address[0..2], out= r57);
+    RAM8(in= in, load= l60, address= address[0..2], out= r60);
+    RAM8(in= in, load= l61, address= address[0..2], out= r61);
+    RAM8(in= in, load= l62, address= address[0..2], out= r62);
+    RAM8(in= in, load= l63, address= address[0..2], out= r63);
+    RAM8(in= in, load= l64, address= address[0..2], out= r64);
+    RAM8(in= in, load= l65, address= address[0..2], out= r65);
+    RAM8(in= in, load= l66, address= address[0..2], out= r66);
+    RAM8(in= in, load= l67, address= address[0..2], out= r67);
+    RAM8(in= in, load= l70, address= address[0..2], out= r70);
+    RAM8(in= in, load= l71, address= address[0..2], out= r71);
+    RAM8(in= in, load= l72, address= address[0..2], out= r72);
+    RAM8(in= in, load= l73, address= address[0..2], out= r73);
+    RAM8(in= in, load= l74, address= address[0..2], out= r74);
+    RAM8(in= in, load= l75, address= address[0..2], out= r75);
+    RAM8(in= in, load= l76, address= address[0..2], out= r76);
+    RAM8(in= in, load= l77, address= address[0..2], out= r77);
+
+    // Loads.
+    DMux8Way(in= l0, sel= address[0..2], a= l00, b= l01, c= l02, d= l03, e= l04, f= l05, g= l06, h= l07);
+    DMux8Way(in= l1, sel= address[0..2], a= l10, b= l11, c= l12, d= l13, e= l14, f= l15, g= l16, h= l17);
+    DMux8Way(in= l2, sel= address[0..2], a= l20, b= l21, c= l22, d= l23, e= l24, f= l25, g= l26, h= l27);
+    DMux8Way(in= l3, sel= address[0..2], a= l30, b= l31, c= l32, d= l33, e= l34, f= l35, g= l36, h= l37);
+    DMux8Way(in= l4, sel= address[0..2], a= l40, b= l41, c= l42, d= l43, e= l44, f= l45, g= l46, h= l47);
+    DMux8Way(in= l5, sel= address[0..2], a= l50, b= l51, c= l52, d= l53, e= l54, f= l55, g= l56, h= l57);
+    DMux8Way(in= l6, sel= address[0..2], a= l60, b= l61, c= l62, d= l63, e= l64, f= l65, g= l66, h= l67);
+    DMux8Way(in= l7, sel= address[0..2], a= l70, b= l71, c= l72, d= l73, e= l74, f= l75, g= l76, h= l77);
+
+    DMux8Way(in= load, sel= address[3..5], a= l0, b= l1, c= l2, d= l3, e= l4, f= l5, g= l6, h= l7);
+
+    // Outs.
+    Mux8Way16(a= r00, b= r01, c= r02, d= r03, e= r04, f= r05, g= r06, h= r07, sel= address[0..2], out=r0);
+    Mux8Way16(a= r10, b= r11, c= r12, d= r13, e= r14, f= r15, g= r16, h= r17, sel= address[0..2], out=r1);
+    Mux8Way16(a= r20, b= r21, c= r22, d= r23, e= r24, f= r25, g= r26, h= r27, sel= address[0..2], out=r2);
+    Mux8Way16(a= r30, b= r31, c= r32, d= r33, e= r34, f= r35, g= r36, h= r37, sel= address[0..2], out=r3);
+    Mux8Way16(a= r40, b= r41, c= r42, d= r43, e= r44, f= r45, g= r46, h= r47, sel= address[0..2], out=r4);
+    Mux8Way16(a= r50, b= r51, c= r52, d= r53, e= r54, f= r55, g= r56, h= r57, sel= address[0..2], out=r5);
+    Mux8Way16(a= r60, b= r61, c= r62, d= r63, e= r64, f= r65, g= r66, h= r67, sel= address[0..2], out=r6);
+    Mux8Way16(a= r70, b= r71, c= r72, d= r73, e= r74, f= r75, g= r76, h= r77, sel= address[0..2], out=r7);
+
+    Mux8Way16(a= r0, b= r1, c= r2, d= r3, e= r4, f= r5, g= r6, h= r7, sel= address[3..5], out= out);
 }
