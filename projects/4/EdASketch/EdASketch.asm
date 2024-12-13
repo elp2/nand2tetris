@@ -1,12 +1,26 @@
-@100
+@yi
+
+// Initialize offset for drawing. 
+// We'll move this manually by the right size without needing underlying x, y.
+@SCREEN
+D=A
+@500
+D=D+A
+@offset
+M=D
+
+// X, Y. At the level of the 
+// Unused, since the looping on Y made it was too slow.
+@10
+D=A
+@y
+M=D
+
+@10
 D=A
 @x
 M=D
 
-@100
-D=A
-@y
-M=D
 
 (READKEYBOARD)
   @KBD
@@ -37,77 +51,95 @@ M=D
   0;JMP
 
 (LEFT)
-  @x
+  // @x
+  // M=M-1
+  @offset
   M=M-1
+  
   @DRAWXY
   0;JMP
 
 (RIGHT)
-  @x
+  // @x
+  // M=M+1
+  @offset
   M=M+1
   @DRAWXY
   0;JMP
 
 (UP)
-  @y
-  M=M-1
+  // @y
+  // M=M-1
+  @32
+  D=A
+  @offset
+  M=M-D
+
   @DRAWXY
   0;JMP
 
 (DOWN)
-  @y
-  M=M+1
+  // @y
+  // M=M+1
+  @32
+  D=A
+  @offset
+  M=D+M
+
   @DRAWXY
   0;JMP
 
 (DRAWXY)
-  @SCREEN
+  @offset
+  A=M
+  M=-1
+  @READKEYBOARD
+  0;JMP
+
+
+(DRAWXYOLD)
+  // The (row, col) pixel in the physical screen is represented by
+  // the (col % 16)th bit in RAM address SCREEN + 32*row + col/16
+  // Offset from Screen = 0
+  @0
   D=A
-  @x
+  @offset
+  M=D
+
+  // yi = y
+  @y
+  D=M
+  @yi
+  M=D
+
+(ADDY) // While y != 0: offset += 32, y --
+  @yi
+  D=M
+  @ADDX
+  D;JEQ
+  @yi
+  M=M-1
+  @32
+  D=A
+  @offset
+  M=D+M
+  @ADDY
+  0;JMP
+
+(ADDX)
+//  @x
+//  D=A
+//  @offset
+//  M=D+M
+
+// Draw it
+  @offset
+  D=M
+  @SCREEN
   D=D+M
+
   A=D
   M=-1
 
   @READKEYBOARD
   0;JMP
-
-// TODO: Untested!!!
-// R2 = R0 * R1 (overwrites R3), JMP's back to R15
-(MULT)
-  // R2 = 0
-  @2
-  M=0
-
-  // R3 = R1
-  @1
-  D=M
-  @3
-  M=D
-
-// If R3 == 0, out result should be good in R2
-(LOOP)
-  // D must be R3 at this point
-  @MULTRETURN
-  D;JEQ
-
-  // R2 += R0
-  @R2
-  D=M
-  @R0
-  D=D+M
-  @R2
-  M=D
-
-  // R3 -= 1
-  @R3
-  D=M
-  D=D-1
-  M=D
-
-  // Go back to the LOOP
-  @LOOP
-  0;JMP
-
-(MULTRETURN)
-@R15
-0;JMP
