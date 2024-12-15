@@ -31,5 +31,43 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    // PC Register.
+    Not(in= jmp, out= pcInc);
+    PC(in= aOut, load= jmp, inc= pcInc, reset= reset, out[0..14]= pc);
+ 
+    // D Register.
+    And(a= instruction[15], b= instruction[4], out= dLoad);    
+    DRegister(in= aluOut, load= dLoad, out= dOut);
+
+    // A Register.
+    Not(in= instruction[15], out= isAinstruction);
+    Mux16(a= aluOut, b= instruction, sel= isAinstruction, out= aInp);
+    Or(a= isAinstruction, b= instruction[5], out= aLoad);
+    ARegister(in= aInp, load= aLoad, out= aOut, out[0..14]= addressM);
+
+    // ALU In.
+    Mux16(a= aOut, b= inM, sel= instruction[12], out= aOrMout);
+
+    // Jumps. Handle each bit separately, get combined behavior in OR().
+    // JGT 0 0 1 if (ALU out > 0) jump
+    // JEQ 0 1 0 if (ALU out = 0) jump
+    // JGE 0 1 1 if (ALU out ≥ 0) jump
+    // JLT 1 0 0 if (ALU out < 0) jump
+    // JNE 1 0 1 if (ALU out ≠ 0) jump
+    // JLE 1 1 0 if (ALU out ≤ 0) jump
+    // JMP 1 1 1 Unconditional jump
+    // j1=2, j2=1. j3=0
+    And(a= gt, b= instruction[0], out= jgt);
+    And(a= zr, b= instruction[1], out= jge);
+    Or(a= jgt, b= jge, out= jmpGtOrGe);
+    And(a= ng, b= instruction[2], out= jlt);
+    Or(a= jmpGtOrGe, b= jlt, out= jmpGtOrGeLt);
+    And(a= jmpGtOrGeLt, b= instruction[15], out= jmp);
+
+    Or(a= zr, b= ng, out= notGt);
+    Not(in= notGt, out= gt);
+
+    ALU(x= dOut, y= aOrMout, zx= instruction[11], nx= instruction[10], zy= instruction[9], ny= instruction[8], f= instruction[7], no= instruction[6], out= aluOut, out= dImp, out= outM, zr= zr, ng= ng);
+
+    And(a= instruction[15], b= instruction[3], out= writeM);
 }
