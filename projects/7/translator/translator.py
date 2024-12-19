@@ -75,6 +75,11 @@ D=A
 A=D+A
 D=M
 """
+        elif segment_label == "POINTER":
+            thisthat = ["THIS", "THAT"][i]
+            ret = f"""@{thisthat}
+D=M
+"""
         else:
             ret = f"""@{segment_label}
 D=M
@@ -98,6 +103,13 @@ D=M
             ret = f"""@{self.TEMP_OFFSET}
 D=A
 """
+        elif segment_label == "POINTER":
+            ret = self.expand(["POP_Y"])
+            thisthat = ["THIS", "THAT"][i]
+            ret += f"""@{thisthat}
+M=D
+"""
+            return ret
         else:
             ret = f"""@{segment_label}
 D=M
@@ -183,25 +195,13 @@ D=-1
                 ret += here
         return ret
 
-# 57
-# 57 31
-# 57 31 53
-# 57 84
-# 57 84 112
-# 57 -28
-# 57 27 ### ?28??? Then 256 became -1
-# 25
-# 25 82
-# 91
-# -92
-
-
 if __name__ == "__main__":
     # f = argv[1]
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm"
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
-    f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
+    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
+    f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/PointerTest/PointerTest.vm"
     assert f.endswith(".vm")
     translator = Translator()
     out = translator.translate(f)
