@@ -11,7 +11,6 @@
 // VM: 
 
 // VM: push constant 17
-// push constant 17
 @17
 D=A
 // RAM[SP] = D
@@ -21,10 +20,8 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: push constant 17
-// push constant 17
 @17
 D=A
 // RAM[SP] = D
@@ -34,7 +31,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: eq
 @SP
@@ -64,7 +60,6 @@ M=M+1
 
 
 // VM: push constant 17
-// push constant 17
 @17
 D=A
 // RAM[SP] = D
@@ -75,9 +70,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 16
-// push constant 16
 @16
 D=A
 // RAM[SP] = D
@@ -87,7 +80,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: eq
 @SP
@@ -117,7 +109,6 @@ M=M+1
 
 
 // VM: push constant 16
-// push constant 16
 @16
 D=A
 // RAM[SP] = D
@@ -128,9 +119,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 17
-// push constant 17
 @17
 D=A
 // RAM[SP] = D
@@ -140,7 +129,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: eq
 @SP
@@ -170,7 +158,6 @@ M=M+1
 
 
 // VM: push constant 892
-// push constant 892
 @892
 D=A
 // RAM[SP] = D
@@ -181,9 +168,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 891
-// push constant 891
 @891
 D=A
 // RAM[SP] = D
@@ -193,7 +178,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: lt
 @SP
@@ -223,7 +207,6 @@ M=M+1
 
 
 // VM: push constant 891
-// push constant 891
 @891
 D=A
 // RAM[SP] = D
@@ -234,9 +217,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 892
-// push constant 892
 @892
 D=A
 // RAM[SP] = D
@@ -246,7 +227,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: lt
 @SP
@@ -276,7 +256,6 @@ M=M+1
 
 
 // VM: push constant 891
-// push constant 891
 @891
 D=A
 // RAM[SP] = D
@@ -286,10 +265,8 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: push constant 891
-// push constant 891
 @891
 D=A
 // RAM[SP] = D
@@ -299,7 +276,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: lt
 @SP
@@ -329,7 +305,6 @@ M=M+1
 
 
 // VM: push constant 32767
-// push constant 32767
 @32767
 D=A
 // RAM[SP] = D
@@ -340,9 +315,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 32766
-// push constant 32766
 @32766
 D=A
 // RAM[SP] = D
@@ -352,7 +325,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: gt
 @SP
@@ -382,7 +354,6 @@ M=M+1
 
 
 // VM: push constant 32766
-// push constant 32766
 @32766
 D=A
 // RAM[SP] = D
@@ -393,9 +364,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 32767
-// push constant 32767
 @32767
 D=A
 // RAM[SP] = D
@@ -405,7 +374,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: gt
 @SP
@@ -435,7 +403,6 @@ M=M+1
 
 
 // VM: push constant 32766
-// push constant 32766
 @32766
 D=A
 // RAM[SP] = D
@@ -445,10 +412,8 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: push constant 32766
-// push constant 32766
 @32766
 D=A
 // RAM[SP] = D
@@ -458,7 +423,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: gt
 @SP
@@ -488,7 +452,6 @@ M=M+1
 
 
 // VM: push constant 57
-// push constant 57
 @57
 D=A
 // RAM[SP] = D
@@ -499,9 +462,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 31
-// push constant 31
 @31
 D=A
 // RAM[SP] = D
@@ -512,9 +473,7 @@ M=D
 @SP
 M=M+1
 
-
 // VM: push constant 53
-// push constant 53
 @53
 D=A
 // RAM[SP] = D
@@ -524,7 +483,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: add
 @SP
@@ -546,7 +504,6 @@ M=M+1
 
 
 // VM: push constant 112
-// push constant 112
 @112
 D=A
 // RAM[SP] = D
@@ -556,7 +513,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: sub
 @SP
@@ -603,14 +559,6 @@ M=M-1
 A=M
 
 D=D&M
-@TRUE_COND.10
-D;JNE
-D=0
-@END_COND.10
-0;JMP
-(TRUE_COND.10)
-D=-1
-(END_COND.10)
 // RAM[SP] = D
 @SP
 A=M
@@ -621,7 +569,6 @@ M=M+1
 
 
 // VM: push constant 82
-// push constant 82
 @82
 D=A
 // RAM[SP] = D
@@ -631,7 +578,6 @@ M=D
 // SP++
 @SP
 M=M+1
-
 
 // VM: or
 @SP
@@ -643,14 +589,6 @@ M=M-1
 A=M
 
 D=D|M
-@TRUE_COND.11
-D;JNE
-D=0
-@END_COND.11
-0;JMP
-(TRUE_COND.11)
-D=-1
-(END_COND.11)
 // RAM[SP] = D
 @SP
 A=M

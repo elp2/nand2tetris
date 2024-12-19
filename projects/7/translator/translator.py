@@ -20,20 +20,28 @@ A=M"""
     ARITHMETIC_OPS = {
         "add": "D=D+M",
         "sub": "D=M-D",
-        
+        "and": "D=D&M",
+        "or": "D=D|M",
     }
-    # Jump to True
     LOGICAL_OPS = {
-        # Operation
+        # (Comparison Op, Jump to True condition).
         "eq": ["D=M-D", "JEQ"],
         "gt": ["D=M-D", "JGT"],
         "lt": ["D=M-D", "JLT"],
-        "and": ["D=D&M", "JNE"],
-        "or": ["D=D|M", "JNE"],
     }
     UNARY_OPS = {
         "neg": "D=-D",
         "not": "D=!D",
+    }
+    PUSH_POP_SEGMENTS = {
+        "constant": "constant",
+        "local": "LCL",
+        "argument": "ARG",
+        "this": "THIS",
+        "that": "THAT",
+        "static": "STATIC",
+        "temp": "TEMP",
+        "pointer": "POINTER",
     }
 
     def __init__(self):
@@ -53,12 +61,46 @@ A=M"""
     def push(self, split):
         segment = split[1]
         i = int(split[2])
-        if segment == "constant":
-            return f"""// push constant {i}
+        assert segment in self.PUSH_POP_SEGMENTS
+        segment_label = self.PUSH_POP_SEGMENTS[segment]
+
+        # Put the value of that into D.
+        if segment_label == "constant":
+            ret = f"@{i}\nD=A\n"
+        else:
+            ret = f"""@{segment_label}
+D=M
 @{i}
-D=A
-{self.expand(["RAM_SP_EQ_D", "SP_INC"])}
+A=D+A
+D=M
 """
+
+        ret += self.expand(["RAM_SP_EQ_D", "SP_INC"])
+        return ret
+
+    def pop(self, split):
+        segment = split[1]
+        i = int(split[2])
+        assert segment in self.PUSH_POP_SEGMENTS
+        assert segment != "constant"
+        segment_label = self.PUSH_POP_SEGMENTS[segment]
+
+        # Calculate address into temp register.
+        ret = f"""@{segment_label}
+D=A
+@{i}
+D=D+A
+@R13
+M=D
+"""
+        self.expand(["POP_Y"])
+        ret += f"""@R13
+A=M
+M=D
+"""
+        return ret
+
+
     def arithmetic(self, op):
         assert op in self.ARITHMETIC_OPS
         return f"""{self.expand(["POP_Y","POP_X"])}
@@ -125,10 +167,24 @@ D=-1
                 ret += here
         return ret
 
+# 57
+# 57 31
+# 57 31 53
+# 57 84
+# 57 84 112
+# 57 -28
+# 57 27 ### ?28??? Then 256 became -1
+# 25
+# 25 82
+# 91
+# -92
+
 
 if __name__ == "__main__":
     # f = argv[1]
+    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm"
     f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
+    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
     assert f.endswith(".vm")
     translator = Translator()
     out = translator.translate(f)
