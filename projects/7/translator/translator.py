@@ -43,6 +43,7 @@ A=M"""
         "temp": "TEMP",
         "pointer": "POINTER",
     }
+    TEMP_OFFSET = 5
 
     def __init__(self):
         self.cond_counter = 0
@@ -67,6 +68,13 @@ A=M"""
         # Put the value of that into D.
         if segment_label == "constant":
             ret = f"@{i}\nD=A\n"
+        elif segment_label == "TEMP":
+            ret = f"""@{self.TEMP_OFFSET}\n
+D=A
+@{i}
+A=D+A
+D=M
+"""
         else:
             ret = f"""@{segment_label}
 D=M
@@ -85,15 +93,23 @@ D=M
         assert segment != "constant"
         segment_label = self.PUSH_POP_SEGMENTS[segment]
 
-        # Calculate address into temp register.
-        ret = f"""@{segment_label}
+        # Calculate base address into D.
+        if segment == "temp":
+            ret = f"""@{self.TEMP_OFFSET}
 D=A
-@{i}
+"""
+        else:
+            ret = f"""@{segment_label}
+D=M
+"""
+        # Add the offset from the base and store into temp register.
+        ret += f"""@{i}
 D=D+A
 @R13
 M=D
 """
-        self.expand(["POP_Y"])
+        # Pop SP into D
+        ret += self.expand(["POP_Y"])
         ret += f"""@R13
 A=M
 M=D
@@ -183,8 +199,9 @@ D=-1
 if __name__ == "__main__":
     # f = argv[1]
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm"
-    f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
+    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
+    f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
     assert f.endswith(".vm")
     translator = Translator()
     out = translator.translate(f)
