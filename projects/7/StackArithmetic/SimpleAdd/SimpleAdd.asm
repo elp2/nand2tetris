@@ -11,22 +11,23 @@
 // VM: 
 
 // VM: push constant 7
-// D = i
+// push constant 7
 @7
 D=A
-// RAM[SP] =D
+// RAM[SP] = D
 @SP
 A=M
 M=D
 // SP++
 @SP
 M=M+1
+
 
 // VM: push constant 8
-// D = i
+// push constant 8
 @8
 D=A
-// RAM[SP] =D
+// RAM[SP] = D
 @SP
 A=M
 M=D
@@ -34,22 +35,23 @@ M=D
 @SP
 M=M+1
 
+
 // VM: add
-// D = SP--
 @SP
 M=M-1
 A=M
-D=M 
-// Pop and add
+D=M
 @SP
 M=M-1
 A=M
+
 D=D+M
-// RAM[SP]=D
+// RAM[SP] = D
 @SP
 A=M
 M=D
 // SP++
 @SP
 M=M+1
+
 
