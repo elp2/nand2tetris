@@ -45,8 +45,9 @@ A=M"""
     }
     TEMP_OFFSET = 5
 
-    def __init__(self):
+    def __init__(self, vm):
         self.cond_counter = 0
+        self.vm = vm
         pass
 
     def inc_cond_counter(self):
@@ -67,9 +68,15 @@ A=M"""
 
         # Put the value of that into D.
         if segment_label == "constant":
-            ret = f"@{i}\nD=A\n"
+            ret = f"""@{i}
+D=A
+"""
+        elif segment_label == "STATIC":
+            ret = f"""@{self.vm}.{i}
+D=M
+"""
         elif segment_label == "TEMP":
-            ret = f"""@{self.TEMP_OFFSET}\n
+            ret = f"""@{self.TEMP_OFFSET}
 D=A
 @{i}
 A=D+A
@@ -110,6 +117,9 @@ D=A
 M=D
 """
             return ret
+        elif segment_label == "STATIC":
+            ret =f"@{self.vm}.{i}\nD=A\n"
+            i = 0
         else:
             ret = f"""@{segment_label}
 D=M
@@ -196,14 +206,16 @@ D=-1
         return ret
 
 if __name__ == "__main__":
-    # f = argv[1]
+    f = argv[1]
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm"
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
     # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
-    f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/PointerTest/PointerTest.vm"
+    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/PointerTest/PointerTest.vm"
+    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/StaticTest/StaticTest.vm"
     assert f.endswith(".vm")
-    translator = Translator()
+    vm = f.split("/")[-1].replace(".vm", "")
+    translator = Translator(vm)
     out = translator.translate(f)
     outf = f.replace(".vm", ".asm")
     with open(outf, "w") as outfile:
