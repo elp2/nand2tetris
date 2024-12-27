@@ -48,7 +48,7 @@ A=M"""
     def __init__(self, vm):
         self.cond_counter = 0
         self.vm = vm
-        pass
+        self.labels = {}
 
     def inc_cond_counter(self):
         self.cond_counter += 1
@@ -172,6 +172,10 @@ D=-1
 {self.UNARY_OPS[op]}
 {self.expand(["RAM_SP_EQ_D","SP_INC"])}
 """
+    def label(self, split):
+        _, name = split
+        self.labels[name] = f"{self.vm}.{name}"
+        return f"@{self.lables[name]}"
 
     def handle(self, line):
         split = line.split(" ")
@@ -189,7 +193,9 @@ D=-1
         elif op in self.LOGICAL_OPS:
             return self.logical(op)
         elif op in self.UNARY_OPS:
-            return self.unary(op)        
+            return self.unary(op)
+        elif op == "label":
+            return self.label(split)
         else:
             assert False
 
