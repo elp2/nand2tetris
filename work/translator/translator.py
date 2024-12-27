@@ -172,10 +172,28 @@ D=-1
 {self.UNARY_OPS[op]}
 {self.expand(["RAM_SP_EQ_D","SP_INC"])}
 """
+
+    def add_label(self, name):
+        self.labels[name] = f"{self.vm}.{name}"
+
     def label(self, split):
         _, name = split
-        self.labels[name] = f"{self.vm}.{name}"
-        return f"@{self.lables[name]}"
+        self.add_label(name)
+        return f"@({self.labels[name]})"
+
+    def if_goto(self, split):
+        assert split[0] == "if-goto"
+        true_label = split[1]
+        return f"""@{true_label}
+D;JNE
+"""
+
+    def goto(self, split):
+        assert split[0] == "goto"
+        goto_label = split[1]
+        return f"""@{goto_label}
+0;JMP
+"""
 
     def handle(self, line):
         split = line.split(" ")
@@ -196,6 +214,10 @@ D=-1
             return self.unary(op)
         elif op == "label":
             return self.label(split)
+        elif op == "if-goto":
+            return self.if_goto(split)
+        elif op == "goto":
+            return self.goto(split)
         else:
             assert False
 
@@ -212,13 +234,17 @@ D=-1
         return ret
 
 if __name__ == "__main__":
-    f = argv[1]
-    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm"
-    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
-    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
-    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
-    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/PointerTest/PointerTest.vm"
-    # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/StaticTest/StaticTest.vm"
+    if len(argv) < 2:
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/StackArithmetic/StackTest/StackTest.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/BasicTest/BasicTest.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/PointerTest/PointerTest.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/StaticTest/StaticTest.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/BasicLoop/BasicLoop.vm"
+        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm"
+    else:
+        f = argv[1]
     assert f.endswith(".vm")
     vm = f.split("/")[-1].replace(".vm", "")
     translator = Translator(vm)
