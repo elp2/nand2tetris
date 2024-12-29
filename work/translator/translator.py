@@ -1,5 +1,33 @@
 from sys import argv
 
+class Function:
+    def __init__(self, name, nVars):
+        self.name = name
+        self.return_count = 0
+
+    def next_return_label(self):
+        rc = self.return_count = self.return_count + 1
+        if not self.name:
+            # Global
+            return f"""ret.{rc}"""
+        else:
+            return f"""{self.name}$ret.{rc}"""
+
+
+def D_EQ_REG(val_or_label):
+    return f"""@{val_or_label}
+D=M
+"""
+
+def PUSH_D_TO_SP():
+    """Push D to SP"""
+    return f"""@SP
+A=M
+M=D
+@SP
+M=M+1
+"""
+
 class Translator:
     TEMPLATES = {
         "RAM_SP_EQ_D": """// RAM[SP] = D
@@ -15,7 +43,7 @@ A=M
 D=M""",
         "POP_X": """@SP
 M=M-1
-A=M"""
+A=M""",
     }
     ARITHMETIC_OPS = {
         "add": "D=D+M",
@@ -49,6 +77,16 @@ A=M"""
         self.cond_counter = 0
         self.vm = vm
         self.labels = {}
+        self.lines = []
+        self.lines_pos = 0
+        self.global_function = Function(None, 0)
+        self.current_function = None
+
+    def active_function(self):
+        if self.current_function:
+            return self.current_function
+        else:
+            return self.global_function
 
     def inc_cond_counter(self):
         self.cond_counter += 1
@@ -195,6 +233,74 @@ D;JNE
 0;JMP
 """
 
+    def define(self):
+        # TODO
+        return f"""({self.name})
+push 0
+push 0
+push 0
+push 0
+push 0
+push 0
+"""
+
+    def label(self, label_name):
+        return f"""{self.name}${label_name}"""
+
+    def call(self, functionname, nArgs):
+        nArgs = int(nArgs)
+        return_label = self.active_function().next_return_label()
+        ret = f"""@{return_label}
+D=A
+"""
+        ret += PUSH_D_TO_SP()
+        ret += D_EQ_REG("LCL")
+        ret += PUSH_D_TO_SP()
+        ret += D_EQ_REG("ARG")
+        ret += PUSH_D_TO_SP()
+        ret += D_EQ_REG("THIS")
+        ret += PUSH_D_TO_SP()
+        ret += D_EQ_REG("THAT")
+        ret += PUSH_D_TO_SP()
+
+        # ARG = SP – 5 – nArgs // Repositions ARG
+        ret += "@SP\nD=M\n"
+        ret += f"@{nArgs + 5}\n"
+        ret += "D=D-A\n"
+        ret += "@ARG\nM=D\n"
+        # LCL = SP // Repositions LCL
+        ret += """@SP
+D=M
+@LCL
+M=D
+"""
+        ret += self.goto(["goto", functionname])
+        ret += f"({return_label})"
+
+        return ret
+
+
+    def function_return(self):
+        self.current_function = self.global_function
+        return "// TODO\n"
+        """// The code below creates and uses two temporary variables:
+// endFrame and retAddr;
+// The pointer notation *addr is used to denote: RAM[addr].
+// endFrame = LCL // gets the address at the frame’s end
+// retAddr = *(endFrame – 5) // gets the return address
+// *ARG = pop() // puts the return value for the caller
+// SP = ARG + 1 // repositions SP
+// THAT = *(endFrame – 1) // restores THAT
+// THIS = *(endFrame – 2) // restores THIS
+// ARG = *(endFrame – 3) // restores ARG
+// LCL = *(endFrame – 4) // restores LCL
+// goto retAddr // jumps to the return address
+"""
+
+    def function(self, name, numLocals):
+        return "//TODO function"
+
+
     def handle(self, line):
         split = line.split(" ")
         if split[0] == "//" or split[0] == "":
@@ -218,20 +324,36 @@ D;JNE
             return self.if_goto(split)
         elif op == "goto":
             return self.goto(split)
+        elif op == "call":
+            return self.call(split[1], split[2])
+        elif op == "function":
+            return self.function(split[1], int(split[2]))
+        elif op == "return":
+            return self.function_return()
         else:
             assert False
 
-    def translate(self, f):
-        ret = ""
-        with open(f, "r") as vm:
-            for line in vm.readlines():
-                line = line.strip()
-                handled = self.handle(line)
+    def next_line(self):
+        if self.lines_pos >= len(self.lines):
+            return None
+        line = self.lines[self.lines_pos]
+        line = line.strip()
+        self.lines_pos += 1
+        return line
 
-                here = f"// VM: {line}\n{handled}\n"
-                print(here)
-                ret += here
-        return ret
+    def translate(self, f):
+        ret = []
+        with open(f, "r") as vm:
+            self.lines = vm.readlines()
+        while True:
+            line = self.next_line()
+            if line is None:
+                return "".join(ret)
+            handled = self.handle(line)
+            here = f"// VM: {line}\n{handled}\n"
+            print(here)
+            ret.append(here)
+
 
 if __name__ == "__main__":
     if len(argv) < 2:
@@ -242,7 +364,8 @@ if __name__ == "__main__":
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/PointerTest/PointerTest.vm"
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/StaticTest/StaticTest.vm"
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/BasicLoop/BasicLoop.vm"
-        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm"
+        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/SimpleFunction/SimpleFunction.vm"
     else:
         f = argv[1]
     assert f.endswith(".vm")
