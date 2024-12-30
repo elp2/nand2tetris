@@ -1,17 +1,23 @@
 from sys import argv
 
 class Function:
-    def __init__(self, name, nVars):
+    def __init__(self, file_base, name):
+        assert not file_base.endswith(".vm")
+        self.file = file_base
         self.name = name
+        if self.name.split(".")[0] == self.file:
+            self.file, self.name = self.name.split(".")
         self.return_count = 0
+
+    def function_label(self):
+        return f"""{self.file}.{self.name}"""
+    
+    def goto_label(self, label):
+        return f"""{self.file}.{self.name}${label}"""
 
     def next_return_label(self):
         rc = self.return_count = self.return_count + 1
-        if not self.name:
-            # Global
-            return f"""ret.{rc}"""
-        else:
-            return f"""{self.name}$ret.{rc}"""
+        return f"""{self.file}.{self.name}$ret.{rc}"""
 
 
 def D_EQ_REG(val_or_label):
@@ -76,10 +82,9 @@ A=M""",
     def __init__(self, vm):
         self.cond_counter = 0
         self.vm = vm
-        self.labels = {}
         self.lines = []
         self.lines_pos = 0
-        self.global_function = Function(None, 0)
+        self.global_function = Function(self.vm, "GLOBAL")
         self.current_function = None
 
     def active_function(self):
@@ -211,24 +216,21 @@ D=-1
 {self.expand(["RAM_SP_EQ_D","SP_INC"])}
 """
 
-    def add_label(self, name):
-        self.labels[name] = f"{self.vm}.{name}"
-
     def label(self, split):
         _, name = split
-        self.add_label(name)
-        return f"@({self.labels[name]})"
+        goto_label = self.active_function().goto_label(name)
+        return f"({goto_label})"
 
     def if_goto(self, split):
         assert split[0] == "if-goto"
-        true_label = split[1]
+        true_label = self.active_function().goto_label(split[1])
         return f"""@{true_label}
 D;JNE
 """
 
     def goto(self, split):
         assert split[0] == "goto"
-        goto_label = split[1]
+        goto_label = self.active_function().goto_label(split[1])
         return f"""@{goto_label}
 0;JMP
 """
@@ -243,9 +245,6 @@ push 0
 push 0
 push 0
 """
-
-    def label(self, label_name):
-        return f"""{self.name}${label_name}"""
 
     def call(self, functionname, nArgs):
         nArgs = int(nArgs)
@@ -274,7 +273,9 @@ D=M
 @LCL
 M=D
 """
-        ret += self.goto(["goto", functionname])
+        ret += f"""@{functionname}
+0;JMP
+"""
         ret += f"({return_label})"
 
         return ret
@@ -305,6 +306,8 @@ M=D
         # retAddr = *(endFrame – 5) // gets the return address
         ret += """@5
 D=D-A
+A=D
+D=M
 @R14
 M=D
 """
@@ -334,7 +337,9 @@ A=M
         return ret
 
     def function(self, name, numLocals):
-        ret = f"({name})\n"
+        self.current_function = Function(self.vm, name)
+
+        ret = f"({self.active_function().function_label()})\n"
         if numLocals == 0:
             return ret
         
@@ -353,6 +358,7 @@ A=A+1
         return ret
 
     def handle(self, line):
+        line = line.replace("\t", " \t ")
         split = line.split(" ")
         if split[0] == "//" or split[0] == "":
             return ""
@@ -392,7 +398,7 @@ A=A+1
         self.lines_pos += 1
         return line
 
-    def translate(self, f):
+    def translate_file(self, f):
         ret = []
         with open(f, "r") as vm:
             self.lines = vm.readlines()
@@ -404,6 +410,8 @@ A=A+1
             here = f"// VM: {line}\n{handled}\n"
             print(here)
             ret.append(here)
+    def translate_dir(self, dir):
+        assert False # TODO
 
 
 if __name__ == "__main__":
@@ -416,14 +424,18 @@ if __name__ == "__main__":
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/7/MemoryAccess/StaticTest/StaticTest.vm"
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/BasicLoop/BasicLoop.vm"
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm"
-        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/SimpleFunction/SimpleFunction.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/NestedFunction/SimpleFunction.vm"
+        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/NestedCall/Sys.vm"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/FibonacciElement/"
     else:
         f = argv[1]
-    assert f.endswith(".vm")
-    vm = f.split("/")[-1].replace(".vm", "")
-    translator = Translator(vm)
-    out = translator.translate(f)
-    outf = f.replace(".vm", ".asm")
-    with open(outf, "w") as outfile:
-        outfile.write(out)
-        print("Wrote to", outf)
+    if f.endswith(".vm"):
+        vm = f.split("/")[-1].replace(".vm", "")
+        translator = Translator(vm)
+        out = translator.translate_file(f)
+        outf = f.replace(".vm", ".asm")
+        with open(outf, "w") as outfile:
+            outfile.write(out)
+            print("Wrote to", outf)
+    elif f.endswith("/"):
+        assert False # TODO        
