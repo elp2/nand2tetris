@@ -280,26 +280,77 @@ M=D
         return ret
 
 
-    def function_return(self):
-        self.current_function = self.global_function
-        return "// TODO\n"
-        """// The code below creates and uses two temporary variables:
-// endFrame and retAddr;
-// The pointer notation *addr is used to denote: RAM[addr].
-// endFrame = LCL // gets the address at the frame’s end
-// retAddr = *(endFrame – 5) // gets the return address
-// *ARG = pop() // puts the return value for the caller
-// SP = ARG + 1 // repositions SP
-// THAT = *(endFrame – 1) // restores THAT
-// THIS = *(endFrame – 2) // restores THIS
-// ARG = *(endFrame – 3) // restores ARG
-// LCL = *(endFrame – 4) // restores LCL
-// goto retAddr // jumps to the return address
+    def unpop_endframe(self, delta, destination):
+        return f"""@{delta}
+D=A
+@R13
+D=M-D
+A=D
+D=M
+@{destination}
+M=D
 """
 
-    def function(self, name, numLocals):
-        return "//TODO function"
 
+    def function_return(self):
+        self.current_function = self.global_function
+
+        # endFrame = LCL // gets the address at the frame’s end
+        ret = ""
+        ret += """@LCL
+D=M
+@R13
+M=D
+"""
+        # retAddr = *(endFrame – 5) // gets the return address
+        ret += """@5
+D=D-A
+@R14
+M=D
+"""
+        # *ARG = pop() // puts the return value for the caller
+        ret += self.expand(["POP_Y"])
+        ret += """@ARG
+A=M
+M=D
+"""
+
+        # SP = ARG + 1 // repositions SP
+        ret += """@ARG
+D=M
+D=D+1
+@SP
+M=D
+"""
+        ret += self.unpop_endframe(1, "THAT")
+        ret += self.unpop_endframe(2, "THIS")
+        ret += self.unpop_endframe(3, "ARG")
+        ret += self.unpop_endframe(4, "LCL")
+        # goto retAddr // jumps to the return address
+        ret += """@R14
+A=M
+0;JMP
+"""
+        return ret
+
+    def function(self, name, numLocals):
+        ret = f"({name})\n"
+        if numLocals == 0:
+            return ret
+        
+        # Set up that many local variables
+        ret += """@LCL
+A=M
+"""
+        for _ in range(numLocals):
+            ret += """M=0
+A=A+1
+"""
+        # Move SP Forward that many times.
+        ret += "@SP\n"
+        for _ in range(numLocals):
+            ret += """M=M+1\n"""
+        return ret
 
     def handle(self, line):
         split = line.split(" ")
