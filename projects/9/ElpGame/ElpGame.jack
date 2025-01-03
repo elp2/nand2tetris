@@ -1,0 +1,38 @@
+class ElpGame {
+
+    static ElpGame instance;
+    field Dino dino;
+    field Cactus cactus;
+
+    /** Constructs a new Pong game. */
+    constructor ElpGame new() {
+	    do Screen.clearScreen();
+        let dino = Dino.new();
+        let cactus = Cactus.new();
+
+        return this;
+    }
+
+    method void dispose() {
+	    do dino.dispose();
+        do cactus.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    function void newInstance() {
+        let instance = ElpGame.new();
+        return;
+    }
+    
+    function ElpGame getInstance() {
+        return instance;
+    }
+    method void run() {
+        while (true) {
+            do dino.draw();
+            do cactus.draw();
+        }
+        return;
+    }
+}

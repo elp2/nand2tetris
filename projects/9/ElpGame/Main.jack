@@ -1,0 +1,10 @@
+class Main {
+    function void main() {
+        var ElpGame game;
+        do ElpGame.newInstance();
+        let game = ElpGame.getInstance();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

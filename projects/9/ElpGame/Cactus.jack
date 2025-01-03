@@ -1,0 +1,49 @@
+class Cactus {
+
+    field int x, y;
+
+    constructor Cactus new() {
+        let x = 100;
+        let y = 0;
+        return this;
+    }
+
+    function int dimension() {
+        return 16;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method int screenLocation() {
+        return 16384 + x;
+        // TODO: return 16384 + x + y * 512;
+    }
+
+    method void draw() {
+        //var int memAddress;
+        // column 0
+        var int memAddress;
+        // let memAddress = 16384+100;
+        let memAddress = screenLocation();
+
+        do Memory.poke(memAddress, -1585);
+        do Memory.poke(memAddress +32, -30359);
+        do Memory.poke(memAddress +64, -30359);
+        do Memory.poke(memAddress +96, -30423);
+        do Memory.poke(memAddress +128, -30423);
+        do Memory.poke(memAddress +160, -30423);
+        do Memory.poke(memAddress +192, -28871);
+        do Memory.poke(memAddress +224, -32767);
+        do Memory.poke(memAddress +256, -32223);
+        do Memory.poke(memAddress +288, -32223);
+        do Memory.poke(memAddress +320, -32223);
+        do Memory.poke(memAddress +352, -449);
+        do Memory.poke(memAddress +384, 1072);
+        do Memory.poke(memAddress +416, 1040);
+        do Memory.poke(memAddress +448, 2032);
+        return;
+    }
+}
