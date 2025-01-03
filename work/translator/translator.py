@@ -1,3 +1,4 @@
+import glob
 from sys import argv
 
 class Function:
@@ -217,7 +218,7 @@ D=-1
 """
 
     def label(self, split):
-        _, name = split
+        _, name = split[:2]
         goto_label = self.active_function().goto_label(name)
         return f"({goto_label})"
 
@@ -228,9 +229,8 @@ D=-1
 D;JNE
 """
 
-    def goto(self, split):
-        assert split[0] == "goto"
-        goto_label = self.active_function().goto_label(split[1])
+    def goto(self, label):
+        goto_label = self.active_function().goto_label(label)
         return f"""@{goto_label}
 0;JMP
 """
@@ -276,7 +276,7 @@ M=D
         ret += f"""@{functionname}
 0;JMP
 """
-        ret += f"({return_label})"
+        ret += f"({return_label})\n"
 
         return ret
 
@@ -294,8 +294,6 @@ M=D
 
 
     def function_return(self):
-        self.current_function = self.global_function
-
         # endFrame = LCL // gets the address at the frame’s end
         ret = ""
         ret += """@LCL
@@ -380,7 +378,7 @@ A=A+1
         elif op == "if-goto":
             return self.if_goto(split)
         elif op == "goto":
-            return self.goto(split)
+            return self.goto(split[1])
         elif op == "call":
             return self.call(split[1], split[2])
         elif op == "function":
@@ -410,9 +408,18 @@ A=A+1
             here = f"// VM: {line}\n{handled}\n"
             print(here)
             ret.append(here)
-    def translate_dir(self, dir):
-        assert False # TODO
 
+    def bootstrap(self):
+        # SP = 256.
+        ret = """// Boostrap Start.
+@256
+D=A
+@SP
+M=D
+""" 
+        ret += self.call("Sys.init", 0)
+        ret += "// Bootstrap End.\n"
+        return ret
 
 if __name__ == "__main__":
     if len(argv) < 2:
@@ -425,8 +432,8 @@ if __name__ == "__main__":
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/BasicLoop/BasicLoop.vm"
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm"
         # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/NestedFunction/SimpleFunction.vm"
-        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/NestedCall/Sys.vm"
-        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/FibonacciElement/"
+        # f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/NestedCall/Sys.vm"
+        f = "/Users/edwardpalmer/dev/nand2tetris/projects/8/FunctionCalls/FibonacciElement/"
     else:
         f = argv[1]
     if f.endswith(".vm"):
@@ -438,4 +445,17 @@ if __name__ == "__main__":
             outfile.write(out)
             print("Wrote to", outf)
     elif f.endswith("/"):
-        assert False # TODO        
+        dirname = f.split("/")[-2]
+        asm = f"{f}/{dirname}.asm"
+        with open(asm, "w") as outfile:
+            bootstrap = Translator("bootstrap")
+            outfile.write(bootstrap.bootstrap())
+
+            vms = glob.glob(f + "*.vm")
+            for vm in vms:
+                outfile.write(f"\n// Translating {vm}.")
+                vmname = vm.split("/")[-1].replace(".vm", "")                                
+                translator = Translator(vmname)
+                out = translator.translate_file(vm)                
+                outfile.write(out)
+            print(f"Wrote {vms} to {asm}")
