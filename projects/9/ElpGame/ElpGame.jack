@@ -6,7 +6,6 @@ class ElpGame {
     field Array cactii;
     field int cactiilen;
 
-    /** Constructs a new Pong game. */
     constructor ElpGame new() {
         var int i, cactusX;
 
@@ -47,26 +46,31 @@ class ElpGame {
 
     method void run() {
         var int i;
+        var char key;
         var Cactus cactus;
         while (true) {
-            do Screen.clearScreen();
+            let key = Keyboard.keyPressed();
 
-            do Screen.drawRectangle(0, 236, 512, 238);
+            while (key = 0) {
+                let key = Keyboard.keyPressed();
+                do Screen.clearScreen();
+                do Screen.drawRectangle(0, 236, 512, 238);
 
-            do dino.jump();
-            do dino.tick();
-            do dino.draw();
+                do dino.tick();
+                do dino.draw();
 
-            let i = 0;
-            while (i < cactiilen) {
-                let cactus = cactii[i];
-                do cactus.draw();
-                do cactus.move(-1, 0);
-                let i = i + 1;
+                let i = 0;
+                while (i < cactiilen) {
+                    let cactus = cactii[i];
+                    do cactus.draw();
+                    do cactus.move(-1, 0);
+                    let i = i + 1;
+                }
+
+                do Sys.wait(40);
             }
 
-            // do Sys.wait(40);
-            do Sys.wait(40);
+            if (~(key = 0)) { do dino.jump(); }
         }
         return;
     }

@@ -1,0 +1,36 @@
+// Untested!
+class Utils {
+    constructor Utils new() {
+        // Does nothing.
+        return this;
+    }
+
+    function int shiftLeft(int num, int shift) {
+        while (true) {
+            if (shift = 0) {
+                return num;
+            }
+            let num = num * 2;
+            let shift = shift - 1;
+        }
+        return 0;
+    }
+
+    function int shiftRight(int num, int shift) {
+        while (true) {
+            if (shift = 0) {
+                return num;
+            }
+            let num = num / 2;
+            let shift = shift - 1;
+        }
+        return 0;
+    }
+
+    function int mod(int n, int m) {
+        var int rem, divides;
+        let divides = n / m;
+        let rem = n - (m * divides);
+        return rem;
+    }
+}
