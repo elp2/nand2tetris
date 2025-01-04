@@ -56,11 +56,8 @@ class ElpGame {
         var String dinoRun, byEd;
         var int ticks;
 
-        let dinoRun = "Dino Run";
-        let byEd = "By Ed";
-
-        do Utils.outputCentered(dinoRun, 5);
-        do Utils.outputCentered(byEd, 7);
+        do Utils.outputCentered("Dino Run", 5);
+        do Utils.outputCentered("By Ed", 7);
         let ticks = 0;
 
         while (true) {
@@ -126,14 +123,10 @@ class ElpGame {
 
     method void stateDead() {
         var char key;
-        var String bonk, youDied, pressAnyKey;
-        let bonk = "BONK!!!";
-        let youDied = "You Died!";
-        let pressAnyKey = "- Press Any Key - ";
 
-        do Utils.outputCentered(bonk, 5);
-        do Utils.outputCentered(youDied, 7);
-        do Utils.outputCentered(pressAnyKey, 10);
+        do Utils.outputCentered("BONK!!!", 5);
+        do Utils.outputCentered("You Died!", 7);
+        do Utils.outputCentered("- Press Any Key - ", 10);
 
         while (true) {
             let key = Keyboard.keyPressed();
@@ -141,7 +134,7 @@ class ElpGame {
             while (key = 0) {
                 let key = Keyboard.keyPressed();
             }
-            let state = 0;
+            let state = 1;
             return;
         }
         return;
