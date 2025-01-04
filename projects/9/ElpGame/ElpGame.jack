@@ -2,20 +2,36 @@ class ElpGame {
 
     static ElpGame instance;
     field Dino dino;
-    field Cactus cactus;
+    field Random random;
+    field Array cactii;
+    field int cactiilen;
 
     /** Constructs a new Pong game. */
     constructor ElpGame new() {
-	    do Screen.clearScreen();
-        let dino = Dino.new();
-        let cactus = Cactus.new();
+        var int i, cactusX;
 
+	    do Screen.clearScreen();
+        let dino = Dino.new(2, 220);
+
+
+        let random = Random.new(42);
+
+        let cactiilen = 5;
+        let cactii = Array.new(cactiilen);
+        let i = 0;
+        let cactusX = 7;
+        while (i < cactiilen) {
+            let cactii[i] = Cactus.new(cactusX, 220, random);
+            let cactusX = cactusX + random.next(7);
+            let i = i + 1;
+        }
+        
         return this;
     }
 
     method void dispose() {
 	    do dino.dispose();
-        do cactus.dispose();
+        do cactii.dispose();
         do Memory.deAlloc(this);
         return;
     }
@@ -28,10 +44,29 @@ class ElpGame {
     function ElpGame getInstance() {
         return instance;
     }
+
     method void run() {
+        var int i;
+        var Cactus cactus;
         while (true) {
+            do Screen.clearScreen();
+
+            do Screen.drawRectangle(0, 236, 512, 238);
+
+            do dino.jump();
+            do dino.tick();
             do dino.draw();
-            do cactus.draw();
+
+            let i = 0;
+            while (i < cactiilen) {
+                let cactus = cactii[i];
+                do cactus.draw();
+                do cactus.move(-1, 0);
+                let i = i + 1;
+            }
+
+            // do Sys.wait(40);
+            do Sys.wait(40);
         }
         return;
     }

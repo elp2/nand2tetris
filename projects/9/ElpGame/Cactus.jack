@@ -1,10 +1,13 @@
 class Cactus {
 
     field int x, y;
+    field Random random;
 
-    constructor Cactus new() {
-        let x = 100;
-        let y = 0;
+
+    constructor Cactus new(int px, int py, Random prandom) {
+        let x = px;
+        let y = py;
+        let random = prandom;
         return this;
     }
 
@@ -17,16 +20,32 @@ class Cactus {
         return;
     }
 
+    method void move(int dx, int dy) {
+        let x = x + dx;
+        if (x < 0) {
+            let x = 31 + random.next(7);
+        }
+        let y = y + dy;
+        return;
+    }
+
     method int screenLocation() {
-        return 16384 + x;
-        // TODO: return 16384 + x + y * 512;
+        return 16384 + (x + (y * 32));
+    }
+
+    method int getX() {
+        return x;
+    }
+    method int getY() {
+        return y;
     }
 
     method void draw() {
-        //var int memAddress;
-        // column 0
         var int memAddress;
-        // let memAddress = 16384+100;
+
+        if (x > 31) {
+            return;
+        }
         let memAddress = screenLocation();
 
         do Memory.poke(memAddress, -1585);

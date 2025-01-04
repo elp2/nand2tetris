@@ -1,11 +1,20 @@
 class Dino {
     field int x, y;
+    field int floorY;
+
+    field int velY;
+    field boolean jumping;
+
     field int frame;
 
-    constructor Dino new() {
-        let x = 30;
-        let y = 30;
+    constructor Dino new(int px, int py) {
+        let x = px;
+        let y = py;
+        let floorY = py;
         let frame = 0;
+        let velY = 0;
+        let jumping = false;
+
         return this;
     }
 
@@ -15,7 +24,7 @@ class Dino {
     }
 
     method void draw() {
-        if (frame < 1) {
+        if (frame = 0) {
             do draw1();
             let frame = 1;
         } else {
@@ -25,9 +34,51 @@ class Dino {
         return;
     }
 
+    method void jump() {
+        if (jumping) { return; }
+
+        let jumping = true;
+        let velY = -30;
+
+        return;
+    }
+
+    method void tick() {
+        if (~jumping) { return; }
+
+        let velY = velY + 4;
+        let y = y + velY;
+        if (y > floorY) {
+            let jumping = false;
+            let y = floorY;
+        }
+        return;
+    }
+
+    function int dimension() {
+        return 16;
+    }
+
     method int screenLocation() {
-        return 16384 + 300;
-        // TODO: return 16384 + x + y * 512;
+        return 16384 + (x + (y * 32));
+    }
+
+    method boolean intersects(Cactus c) {
+        var int cl, cr, cu, cd;
+        let cl = c.getX();
+        if (x + Dino.dimension() < cl) { return false; }
+
+        let cr = cl + Cactus.dimension();
+        if (x > cr) { return false; }
+
+        // Intersects on x.
+
+        let cu = c.getY();
+        if (y + Dino.dimension() < cu) { return false; }
+        let cd = c.getY() + Cactus.dimension();
+        if (y > cu) { return false; }
+
+        return true;
     }
 
     method void draw1() {

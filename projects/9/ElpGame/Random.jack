@@ -1,0 +1,17 @@
+class Random {
+
+    field int seed;
+
+    constructor Random new(int pseed) {
+        let seed = pseed;
+        return this;
+    }
+
+    method int next(int mask) {
+        // Seed should be the previous value returned, if any.
+        // Returns a value < mask.
+        let seed = seed * 13 + 37;
+
+        return seed & mask;
+    }
+}
