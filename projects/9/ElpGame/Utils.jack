@@ -5,7 +5,7 @@ class Utils {
         return this;
     }
 
-    function int shiftLeft(int num, int shift) {
+    function int untested_shiftLeft(int num, int shift) {
         while (true) {
             if (shift = 0) {
                 return num;
@@ -16,7 +16,7 @@ class Utils {
         return 0;
     }
 
-    function int shiftRight(int num, int shift) {
+    function int untested_shiftRight(int num, int shift) {
         while (true) {
             if (shift = 0) {
                 return num;
@@ -27,10 +27,20 @@ class Utils {
         return 0;
     }
 
-    function int mod(int n, int m) {
+    function int untested_mod(int n, int m) {
         var int rem, divides;
         let divides = n / m;
         let rem = n - (m * divides);
         return rem;
+    }
+
+    function void outputCentered(String s, int row) {
+        var int x;
+        // do Output.moveCursor(1, 5); // row = 1, col = 5
+        let x = (64 - (s.length())) / 2;
+        // do Output.printInt(x);
+        do Output.moveCursor(row, x);
+        do Output.printString(s);
+        return;
     }
 }

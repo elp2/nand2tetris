@@ -5,25 +5,14 @@ class ElpGame {
     field Random random;
     field Array cactii;
     field int cactiilen;
+    field int score;
+    field int state; // 0 = menu, 1 = running, 2 = dead.
 
     constructor ElpGame new() {
         var int i, cactusX;
 
 	    do Screen.clearScreen();
         let dino = Dino.new(2, 220);
-
-
-        let random = Random.new(42);
-
-        let cactiilen = 5;
-        let cactii = Array.new(cactiilen);
-        let i = 0;
-        let cactusX = 7;
-        while (i < cactiilen) {
-            let cactii[i] = Cactus.new(cactusX, 220, random);
-            let cactusX = cactusX + random.next(7);
-            let i = i + 1;
-        }
         
         return this;
     }
@@ -39,15 +28,64 @@ class ElpGame {
         let instance = ElpGame.new();
         return;
     }
+
+    method void setup(int ticks) {
+        var int i, cactusX;
+
+        if (cactiilen = 5) { return; }
+
+        let random = Random.new(ticks);
+        let cactiilen = 5;
+        let cactii = Array.new(cactiilen);
+        let i = 0;
+        let cactusX = 12;
+        while (i < cactiilen) {
+            let cactii[i] = Cactus.new(cactusX, 220, random);
+            let cactusX = cactusX + random.next(15);
+            let i = i + 1;
+        }
+        return;
+    }
     
     function ElpGame getInstance() {
         return instance;
     }
 
-    method void run() {
-        var int i;
+    method void stateMenu() {
         var char key;
+        var String dinoRun, byEd;
+        var int ticks;
+
+        let dinoRun = "Dino Run";
+        let byEd = "By Ed";
+
+        do Utils.outputCentered(dinoRun, 5);
+        do Utils.outputCentered(byEd, 7);
+        let ticks = 0;
+
+        while (true) {
+            let ticks = ticks + 1;
+            let key = Keyboard.keyPressed();
+
+            while (key = 0) {
+                let key = Keyboard.keyPressed();
+            }
+
+            let state = 1;
+            do setup(ticks);
+            return;
+        }
+        return;
+    }
+
+    method void stateRunning() {
+        var char key;
+        var int i;
         var Cactus cactus;
+        var boolean intersected;
+
+        let score = 0;
+
         while (true) {
             let key = Keyboard.keyPressed();
 
@@ -58,19 +96,63 @@ class ElpGame {
 
                 do dino.tick();
                 do dino.draw();
+                
+                do Output.moveCursor(0, 0);
+                do Output.printString("SCORE:");
+                do Output.printInt(score);
+                let score = score + 1;
 
+                let intersected = false;
                 let i = 0;
                 while (i < cactiilen) {
                     let cactus = cactii[i];
                     do cactus.draw();
+                    let intersected = intersected | dino.intersects(cactus);
                     do cactus.move(-1, 0);
                     let i = i + 1;
+                }
+                if (intersected) {
+                    let state = 2;
+                    return;
                 }
 
                 do Sys.wait(40);
             }
 
             if (~(key = 0)) { do dino.jump(); }
+        }
+        return;
+    }
+
+    method void stateDead() {
+        var char key;
+        var String bonk, youDied, pressAnyKey;
+        let bonk = "BONK!!!";
+        let youDied = "You Died!";
+        let pressAnyKey = "- Press Any Key - ";
+
+        do Utils.outputCentered(bonk, 5);
+        do Utils.outputCentered(youDied, 7);
+        do Utils.outputCentered(pressAnyKey, 10);
+
+        while (true) {
+            let key = Keyboard.keyPressed();
+
+            while (key = 0) {
+                let key = Keyboard.keyPressed();
+            }
+            let state = 0;
+            return;
+        }
+        return;
+    }
+
+
+    method void run() {
+        while (true) {
+            if (state = 0) { do stateMenu(); }
+            if (state = 1) { do stateRunning(); }
+            if (state = 2) { do stateDead(); }
         }
         return;
     }

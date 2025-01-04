@@ -64,13 +64,10 @@ class Dino {
     }
 
     method boolean intersects(Cactus c) {
-        var int cl, cr, cu, cd;
-        let cl = c.getX();
-        if (x + Dino.dimension() < cl) { return false; }
-
-        let cr = cl + Cactus.dimension();
-        if (x > cr) { return false; }
-
+        var int cx, cu, cd;
+        if (~(x = c.getX())) {
+            return false;
+        }
         // Intersects on x.
 
         let cu = c.getY();
