@@ -17,7 +17,7 @@ def tokenizer_test(file: str, content: str) -> None:
         f.write("</tokens>\r\n")
 
 def compilation_engine_test(file: str, content: str) -> None:
-    output_file = file.replace(".jack", "T.xml")
+    output_file = file.replace(".jack", ".xml")
     engine = CompilationEngine(content, output_file)
     engine.compile()
     with open(output_file, 'w') as f:

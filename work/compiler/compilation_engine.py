@@ -118,7 +118,6 @@ class CompilationEngine:
 
     def compile_statement(self):
         """Compile a statement"""
-        self._write_rule_start("statement")
 
         {
             "let": self.compile_let_statement,
@@ -127,8 +126,6 @@ class CompilationEngine:
             "do": self.compile_do_statement,
             "return": self.compile_return_statement
         }[self.tokenizer.get_current_token().get_token()]()
-
-        self._write_rule_end("statement")
     
     def compile_let_statement(self):
         """Compile a let statement"""
@@ -151,6 +148,13 @@ class CompilationEngine:
         self.process(JackToken.TokenType.SYMBOL, "{")
         self.compile_statements()
         self.process(JackToken.TokenType.SYMBOL, "}")
+
+        if self.tokenizer.get_current_token().get_token() == "else":
+            self.process(JackToken.TokenType.KEYWORD, "else")
+            self.process(JackToken.TokenType.SYMBOL, "{")
+            self.compile_statements()
+            self.process(JackToken.TokenType.SYMBOL, "}")
+            
         self._write_rule_end("ifStatement")
 
     def compile_while_statement(self):
