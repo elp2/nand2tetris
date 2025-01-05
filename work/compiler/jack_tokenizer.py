@@ -35,6 +35,25 @@ class JackToken:
         """Returns the token type"""
         return self.token_type
 
+    def xml_str(self) -> str:
+        # Handle special XML characters.
+        xml_value = self.token
+        if self.token_type == JackToken.TokenType.SYMBOL:
+            if self.token == "<":
+                xml_value = "&lt;"
+            elif self.token == ">":
+                xml_value = "&gt;"
+            elif self.token == "&":
+                xml_value = "&amp;"
+        
+        xml_type = self.token_type.value.lower()
+        if self.token_type == JackToken.TokenType.INTEGER:
+            xml_type = "integerConstant"
+        elif self.token_type == JackToken.TokenType.STRING:
+            xml_type = "stringConstant"
+
+        return f"<{xml_type}> {xml_value} </{xml_type}>"
+
 
 class JackTokenizer:
     def __init__(self, content: str):

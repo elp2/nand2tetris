@@ -117,7 +117,7 @@ class CompilationEngine:
             raise Exception(f"Expected Type {expected_type}, got {token.get_token_type()} [{token}]")
         if expected_value and token.get_token() != expected_value:
             raise Exception(f"Expected Value {expected_value}, got {token.get_token()} [{token}]")
-        self._write_terminal(token)
+        self._write_token(token)
         if self.tokenizer.has_more_tokens():
             self.tokenizer.advance()
         return token
@@ -132,9 +132,9 @@ class CompilationEngine:
         """Helper to indent the output"""
         return "  " * self.indent_level
     
-    def _write_element(self, tag: str, content: str):
+    def _write_token(self, token: JackToken):
         """Helper to write an XML element with proper indentation"""
-        self.output.append(f"{self._indent()}<{tag}> {content} </{tag}>")
+        self.output.append(f"{self._indent()}{token.xml_str()}")
     
     def _write_rule_start(self, rule: str):
         """Write the start of a rule"""
@@ -145,25 +145,3 @@ class CompilationEngine:
         """Write the end of a rule"""
         self.indent_level -= 1
         self.output.append(f"{self._indent()}</{rule}>")
-
-    # TODO: Remove this???
-    def _write_terminal(self, token: JackToken):
-        """Write a terminal token element"""
-        token_type = token.get_token_type().value.lower()
-        token_value = token.get_token()
-        
-        # Handle special XML characters
-        if token_type == "symbol":
-            if token_value == "<":
-                token_value = "&lt;"
-            elif token_value == ">":
-                token_value = "&gt;" 
-            elif token_value == "&":
-                token_value = "&amp;"
-                
-        if token_type == "integer":
-            token_type = "integerConstant"
-        elif token_type == "string":
-            token_type = "stringConstant"
-            
-        self._write_element(token_type, token_value)

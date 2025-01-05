@@ -12,24 +12,7 @@ def tokenizer_test(file: str, content: str) -> None:
         while tokenizer.has_more_tokens():
             tokenizer.advance()
             token = tokenizer.get_current_token()
-            token_type = token.get_token_type().value.lower()
-            token_value = token.get_token()
-            
-            # Handle special XML characters
-            if token_type == "symbol":
-                if token_value == "<":
-                    token_value = "&lt;"
-                elif token_value == ">":
-                    token_value = "&gt;"
-                elif token_value == "&":
-                    token_value = "&amp;"
-            
-            if token_type == "integer":
-                token_type = "integerConstant"
-            elif token_type == "string":
-                token_type = "stringConstant"
-
-            f.write(f"<{token_type}> {token_value} </{token_type}>\r\n")
+            f.write(token.xml_str() + "\r\n")
         f.write("</tokens>\r\n")
 
 def process_files(jack_files: list[str], test_tokenizer: bool):
