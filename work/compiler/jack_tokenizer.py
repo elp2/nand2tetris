@@ -121,9 +121,3 @@ class JackTokenizer:
     def get_current_token(self) -> JackToken:
         """Returns the current token. Should only be called after advance"""
         return self.current_token
-
-    def peek(self) -> str:
-        """Returns the next character without advancing"""
-        if self.index < len(self.content):
-            return self.content[self.index]
-        return None

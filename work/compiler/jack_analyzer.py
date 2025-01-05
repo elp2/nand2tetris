@@ -1,7 +1,8 @@
 from jack_tokenizer import JackTokenizer, JackToken
+
+import argparse
 import sys
 import os
-import argparse
 
 def tokenizer_test(file: str, content: str) -> None:
     output_file = file.replace(".jack", "T.xml")
