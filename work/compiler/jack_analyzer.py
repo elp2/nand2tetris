@@ -8,11 +8,11 @@ def tokenizer_test(file: str, content: str) -> None:
     with open(output_file, 'w') as f:
         f.write("<tokens>\r\n")
         tokenizer = JackTokenizer(content)
-        while tokenizer.hasMoreTokens():
+        while tokenizer.has_more_tokens():
             tokenizer.advance()
-            token = tokenizer.currentToken()
-            token_type = token.getTokenType().value.lower()
-            token_value = token.getToken()
+            token = tokenizer.get_current_token()
+            token_type = token.get_token_type().value.lower()
+            token_value = token.get_token()
             
             # Handle special XML characters
             if token_type == "symbol":
@@ -39,9 +39,9 @@ def process_files(jack_files: list[str], test_tokenizer: bool):
         
         tokenizer = JackTokenizer(content)
         
-        while tokenizer.hasMoreTokens():
+        while tokenizer.has_more_tokens():
             tokenizer.advance()
-            current_token = tokenizer.currentToken()
+            current_token = tokenizer.get_current_token()
             print(current_token)
         
         if test_tokenizer:

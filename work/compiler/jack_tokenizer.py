@@ -27,11 +27,11 @@ class JackToken:
     def __hash__(self):
         return hash((self.token, self.token_type))
 
-    def getToken(self) -> str:
+    def get_token(self) -> str:
         """Returns the token string"""
         return self.token
 
-    def getTokenType(self) -> TokenType:
+    def get_token_type(self) -> TokenType:
         """Returns the token type"""
         return self.token_type
 
@@ -40,11 +40,11 @@ class JackTokenizer:
     def __init__(self, content: str):
         """Initialize the tokenizer with a Jack source file"""
         self.content = content
-        self.removeCommentsAndWhitespace()
+        self.remove_comments_and_whitespace()
         self.index = 0
         self.current_token = None
 
-    def removeCommentsAndWhitespace(self) -> None:
+    def remove_comments_and_whitespace(self) -> None:
         """Removes comments and whitespace from the content"""
 
         while True:
@@ -68,27 +68,21 @@ class JackTokenizer:
 
         self.content = self.content.strip()
 
-    def charAt(self, index: int) -> str:
-        """Returns the character at the given index or None if out of bounds"""
-        if index < 0 or index >= len(self.content):
-            return None
-        return self.content[index]
-
-    def isKeyword(self, token: str) -> bool:
+    def is_keyword(self, token: str) -> bool:
         """Returns true if the token is a keyword"""
         return token in KEYWORDS
 
-    def isSymbol(self, token: str) -> bool:
+    def is_symbol(self, token: str) -> bool:
         """Returns true if the token is a symbol"""
         return token in SYMBOLS
 
-    def hasMoreTokens(self) -> bool:
+    def has_more_tokens(self) -> bool:
         """Returns true if there are more tokens to process"""
         return self.index < len(self.content)
 
     def advance(self) -> None:
-        """Advances to the next token. Should only be called if hasMoreTokens is true"""
-        if not self.hasMoreTokens():
+        """Advances to the next token. Should only be called if has_more_tokens is true"""
+        if not self.has_more_tokens():
             raise Exception("No more tokens to process")
         
         # Skip whitespace
@@ -119,12 +113,12 @@ class JackTokenizer:
             while self.index < len(self.content) and (self.content[self.index].isalnum() or self.content[self.index] == '_'):
                 token += self.content[self.index]
                 self.index += 1
-            token_type = JackToken.TokenType.KEYWORD if self.isKeyword(token) else JackToken.TokenType.IDENTIFIER
+            token_type = JackToken.TokenType.KEYWORD if self.is_keyword(token) else JackToken.TokenType.IDENTIFIER
             self.current_token = JackToken(token, token_type)
         else:
             raise Exception(f"Invalid character: {next}, context: {self.content[self.index-10:self.index+10]}")
             
-    def currentToken(self) -> JackToken:
+    def get_current_token(self) -> JackToken:
         """Returns the current token. Should only be called after advance"""
         return self.current_token
 
