@@ -1,3 +1,4 @@
+from compilation_engine import CompilationEngine
 from jack_tokenizer import JackTokenizer, JackToken
 
 import argparse
@@ -15,7 +16,15 @@ def tokenizer_test(file: str, content: str) -> None:
             f.write(token.xml_str() + "\r\n")
         f.write("</tokens>\r\n")
 
-def process_files(jack_files: list[str], test_tokenizer: bool):
+def compilation_engine_test(file: str, content: str) -> None:
+    output_file = file.replace(".jack", "T.xml")
+    engine = CompilationEngine(content, output_file)
+    engine.compile()
+    with open(output_file, 'w') as f:
+        for line in engine.output:
+            f.write(line + "\r\n")
+
+def process_files(jack_files: list[str], test_tokenizer: bool, test_compilation_engine: bool):
     for file in jack_files:
         print(f"Processing file: {file}")
         with open(file, 'r') as f:
@@ -23,24 +32,23 @@ def process_files(jack_files: list[str], test_tokenizer: bool):
         
         tokenizer = JackTokenizer(content)
         
-        while tokenizer.has_more_tokens():
-            tokenizer.advance()
-            current_token = tokenizer.get_current_token()
-            print(current_token)
-        
         if test_tokenizer:
             print("Running tokenizer test mode")
             tokenizer_test(file, content)
-            # Add tokenizer test code here
+        elif test_compilation_engine:
+            print("Running compilation engine test mode")
+            compilation_engine_test(file, content)
         else:
-            print("Running analyzer mode")
-            # Add analyzer code here
+            print("TODO: Non-test mode")
+            assert False
 
 def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Analyze Jack files')
     parser.add_argument('--test_tokenizer', action='store_true',
                       help='run in tokenizer test mode')
+    parser.add_argument('--test_compilation_engine', action='store_true',
+                      help='run in compilation engine test mode')
     parser.add_argument('input_path',
                       help='input .jack file or directory containing .jack files')
     
@@ -62,7 +70,7 @@ def main():
             sys.exit(1)
         jack_files = [args.input_path]
 
-    process_files(jack_files, args.test_tokenizer)
+    process_files(jack_files, args.test_tokenizer, args.test_compilation_engine)
 
 if __name__ == "__main__":
     main()

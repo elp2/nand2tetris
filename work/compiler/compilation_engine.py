@@ -1,5 +1,9 @@
 from jack_tokenizer import JackTokenizer, JackToken
 
+OPS = ["+", "-", "*", "/", "&", "|", "<", ">", "="]
+UNARY_OPS = ["-", "~"]
+KEYWORD_CONSTANTS = ["true", "false", "null", "this"]
+
 class CompilationEngine:
     def __init__(self, content: str, output_filename: str):
         """Initialize the compilation engine with Jack source content and output file"""
@@ -34,8 +38,7 @@ class CompilationEngine:
     def compile_class_var_dec(self):
         """Compile a class variable declaration"""
         self._write_rule_start("classVarDec")
-        static_field = self.process(JackToken.TokenType.KEYWORD, 
-                                   "static" if self.tokenizer.get_current_token().get_token() == "static" else "field")
+        static_field = self.process(JackToken.TokenType.KEYWORD, ["static", "field"])
         var_type = self.process_var_type()
         var_names = []
         var_names.append(self.process(JackToken.TokenType.IDENTIFIER))
@@ -47,76 +50,240 @@ class CompilationEngine:
     
     def compile_subroutine(self):
         """Compile a subroutine"""
-        pass
+        self._write_rule_start("subroutineDec")
+        constructorFunctionMethod = self.process(JackToken.TokenType.KEYWORD, ["constructor", "function", "method"])
+        
+        if self.tokenizer.get_current_token().get_token() == "void":
+            subroutine_type = self.process(JackToken.TokenType.KEYWORD)
+        else:
+            subroutine_type = self.process_var_type()
+
+        subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
+        self.process(JackToken.TokenType.SYMBOL, "(")
+        self.compile_parameter_list()
+        self.process(JackToken.TokenType.SYMBOL, ")")
+        self.compile_subroutine_body()
+        self._write_rule_end("subroutineDec")
     
     def compile_parameter_list(self):
         """Compile a parameter list"""
-        pass
+        self._write_rule_start("parameterList")
+        if self.tokenizer.get_current_token().get_token() == ")":
+            self._write_rule_end("parameterList")
+            return
+
+        var_type = self.process_var_type()
+        var_name = self.process(JackToken.TokenType.IDENTIFIER)
+
+        while self.tokenizer.get_current_token().get_token() == ",":
+            self.process(JackToken.TokenType.SYMBOL, ",")
+            var_type = self.process_var_type()
+            var_name = self.process(JackToken.TokenType.IDENTIFIER)
+
+        self._write_rule_end("parameterList")
     
     def compile_subroutine_body(self):
         """Compile a subroutine body"""
-        pass
+        self._write_rule_start("subroutineBody")
+        self.process(JackToken.TokenType.SYMBOL, "{")
+        while (self.tokenizer.get_current_token().get_token_type() == JackToken.TokenType.KEYWORD and
+               self.tokenizer.get_current_token().get_token() in ["var"]):
+            self.compile_var_dec()
+        self.compile_statements()
+        self.process(JackToken.TokenType.SYMBOL, "}")
+        self._write_rule_end("subroutineBody")
     
     def compile_var_dec(self):
         """Compile a variable declaration"""
-        pass
+        self._write_rule_start("varDec")
+        self.process(JackToken.TokenType.KEYWORD, "var")
+        var_type = self.process_var_type()
+        var_name = self.process(JackToken.TokenType.IDENTIFIER)
+        while self.tokenizer.get_current_token().get_token() == ",":
+            self.process(JackToken.TokenType.SYMBOL, ",")
+            var_name = self.process(JackToken.TokenType.IDENTIFIER)
+        self.process(JackToken.TokenType.SYMBOL, ";")
+        self._write_rule_end("varDec")
     
     def compile_statements(self):
         """Compile a statement"""
-        pass
+        self._write_rule_start("statements")
+        while True:
+            if (self.tokenizer.get_current_token().get_token_type() == JackToken.TokenType.KEYWORD and
+               self.tokenizer.get_current_token().get_token() in ["let", "if", "while", "do", "return"]):
+                self.compile_statement()
+            else:
+                break
+        self._write_rule_end("statements")
 
+    def compile_statement(self):
+        """Compile a statement"""
+        self._write_rule_start("statement")
+
+        {
+            "let": self.compile_let_statement,
+            "if": self.compile_if_statement,
+            "while": self.compile_while_statement,
+            "do": self.compile_do_statement,
+            "return": self.compile_return_statement
+        }[self.tokenizer.get_current_token().get_token()]()
+
+        self._write_rule_end("statement")
+    
     def compile_let_statement(self):
         """Compile a let statement"""
-        pass
+        self._write_rule_start("letStatement")
+        self.process(JackToken.TokenType.KEYWORD, "let")
+        var_name = self.process(JackToken.TokenType.IDENTIFIER)
+        # TODO: handle array indexing.
+        self.process(JackToken.TokenType.SYMBOL, "=")
+        self.compile_expression()
+        self.process(JackToken.TokenType.SYMBOL, ";")
+        self._write_rule_end("letStatement")
 
     def compile_if_statement(self):
         """Compile an if statement"""
-        pass
+        self._write_rule_start("ifStatement")
+        self.process(JackToken.TokenType.KEYWORD, "if")
+        self.process(JackToken.TokenType.SYMBOL, "(")
+        self.compile_expression()
+        self.process(JackToken.TokenType.SYMBOL, ")")
+        self.process(JackToken.TokenType.SYMBOL, "{")
+        self.compile_statements()
+        self.process(JackToken.TokenType.SYMBOL, "}")
+        self._write_rule_end("ifStatement")
 
     def compile_while_statement(self):
         """Compile a while statement"""
-        pass
+        self._write_rule_start("whileStatement")
+        self.process(JackToken.TokenType.KEYWORD, "while")
+        self.process(JackToken.TokenType.SYMBOL, "(")
+        self.compile_expression()
+        self.process(JackToken.TokenType.SYMBOL, ")")
+        self.process(JackToken.TokenType.SYMBOL, "{")
+        self.compile_statements()
+        self.process(JackToken.TokenType.SYMBOL, "}")
+        self._write_rule_end("whileStatement")
 
     def compile_do_statement(self):
         """Compile a do statement"""
-        pass
+        self._write_rule_start("doStatement")
+        self.process(JackToken.TokenType.KEYWORD, "do")
+        self.compile_subroutine_call(self.process())
+        self.process(JackToken.TokenType.SYMBOL, ";")
+        self._write_rule_end("doStatement")
 
     def compile_return_statement(self):
         """Compile a return statement"""
-        pass
+        self._write_rule_start("returnStatement")
+        self.process(JackToken.TokenType.KEYWORD, "return")
+        if self.tokenizer.get_current_token().get_token() != ";":
+            self.compile_expression()
+        self.process(JackToken.TokenType.SYMBOL, ";")
+        self._write_rule_end("returnStatement")
     
     def compile_expression(self):
         """Compile an expression"""
-        pass
+        self._write_rule_start("expression")
+    
+        self.compile_term()
+        while self.tokenizer.get_current_token().get_token() in OPS:
+            self.process(JackToken.TokenType.SYMBOL, OPS)
+            self.compile_term()
+
+        self._write_rule_end("expression")
 
     def compile_expression_list(self):
         """Compile an expression list"""
-        pass
+        self._write_rule_start("expressionList")
+        if self.tokenizer.get_current_token().get_token() == ")":
+            self._write_rule_end("expressionList")
+            return
+        self.compile_expression()
+        while self.tokenizer.get_current_token().get_token() == ",":
+            self.process(JackToken.TokenType.SYMBOL, ",")
+            self.compile_expression()
+        self._write_rule_end("expressionList")
+
+    def compile_subroutine_call(self, t1: JackToken):
+        """Compile a subroutine call"""
+        # Does not print rule name.
+        next_token = self.tokenizer.get_current_token()
+        if next_token.get_token() == ".":
+            # (className | varName) "." subroutineName "(" expressionList ")"
+            class_var_name = t1.get_token()
+            self.process(JackToken.TokenType.SYMBOL, ".")
+            subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
+            self.process(JackToken.TokenType.SYMBOL, "(")
+            self.compile_expression_list()
+            self.process(JackToken.TokenType.SYMBOL, ")")
+        elif next_token.get_token() == "(":
+            # subroutineNem "(" expressionList ")"
+            class_var_name = None
+            subroutine_name = t1.get_token()
+            self.process(JackToken.TokenType.SYMBOL, "(")
+            self.compile_expression_list()
+            self.process(JackToken.TokenType.SYMBOL, ")")
+        else:
+            assert False
 
     def compile_term(self):
         """Compile a term"""
-        pass
+        # TODO: more complex term handling.
+        self._write_rule_start("term")
+
+        # Lookahead for LL(2) parsing edge case.
+        t1 = self.process()
+        next_token = self.tokenizer.get_current_token()
+        if next_token.get_token() == "[":
+            # arrayName "[" expression "]"
+            array_name = t1.get_token()
+            self.process(JackToken.TokenType.SYMBOL, "[")
+            self.compile_expression()
+            self.process(JackToken.TokenType.SYMBOL, "]")
+        elif next_token.get_token() in [".", "("]:
+            self.compile_subroutine_call(t1)
+        elif t1.get_token() == "(":
+            # ( expression )
+            self.compile_expression()
+            self.process(JackToken.TokenType.SYMBOL, ")")
+        elif t1.get_token() in UNARY_OPS:
+            # unaryOp term
+            # TODO: handle t1 unary.
+            self.compile_term()
+        elif t1.get_token_type() == JackToken.TokenType.INTEGER:
+            # integerConstant
+            self.process(JackToken.TokenType.INTEGER)
+        elif t1.get_token_type() == JackToken.TokenType.STRING:
+            # stringConstant
+            self.process(JackToken.TokenType.STRING)
+        elif t1.get_token() in KEYWORD_CONSTANTS:
+            # keywordConstant
+            # TODO: handle keyword constants.
+            keyword_constant = t1.get_token()
+            pass
+        else:
+            var_name = t1.get_token()
+
+        self._write_rule_end("term")
 
     def process_var_type(self):
         """Processes a variable type"""
         token = self.tokenizer.get_current_token()
         if token.get_token_type() == JackToken.TokenType.IDENTIFIER:
             return self.process(JackToken.TokenType.IDENTIFIER)
-        elif token.get_token_type() == JackToken.TokenType.KEYWORD:
-            if token.get_token() in ["int", "char", "boolean"]:
-                return self.process(JackToken.TokenType.KEYWORD)
-            else:
-                raise Exception(f"Expected Type {JackToken.TokenType.KEYWORD} to be int/char/boolean, got [{token}]")
-        else:
-            raise Exception(f"Expected Type {JackToken.TokenType.IDENTIFIER} or {JackToken.TokenType.KEYWORD}, got {token.get_token_type()} [{token}]")
+        return self.process(JackToken.TokenType.KEYWORD, ["int", "char", "boolean"])
 
-    def process(self, expected_type: JackToken.TokenType = None, expected_value: str = None):
+    def process(self, expected_type: JackToken.TokenType = None, expected_values = None):
         """Processes a token, and compares it to expected. Returns the token for the caller to use if needed."""
         token = self.tokenizer.get_current_token()
         if expected_type and token.get_token_type() != expected_type:
-            raise Exception(f"Expected Type {expected_type}, got {token.get_token_type()} [{token}]")
-        if expected_value and token.get_token() != expected_value:
-            raise Exception(f"Expected Value {expected_value}, got {token.get_token()} [{token}]")
+            raise Exception(f"Expected Type {expected_type}, got {token.get_token_type()} [{token}] Context: [{self.tokenizer.get_context()}]")
+        if expected_values:
+            if type(expected_values) == str:
+                expected_values = [expected_values]
+            if token.get_token() not in expected_values:
+                raise Exception(f"Expected Value {expected_values}, got {token.get_token()} [{token}] Context: [{self.tokenizer.get_context()}]")
         self._write_token(token)
         if self.tokenizer.has_more_tokens():
             self.tokenizer.advance()

@@ -140,3 +140,9 @@ class JackTokenizer:
     def get_current_token(self) -> JackToken:
         """Returns the current token. Should only be called after advance"""
         return self.current_token
+
+    def get_context(self) -> str:
+        """Returns some characters before and after the current index for debugging."""
+        start = max(0, self.index - 20)
+        end = min(len(self.content), self.index + 20)
+        return self.content[start:end]
