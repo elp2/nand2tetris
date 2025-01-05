@@ -1,15 +1,52 @@
-import JackTokenizer
+from jack_tokenizer import JackTokenizer, JackToken
 import sys
 import os
 import argparse
 
+def tokenizer_test(file: str, content: str) -> None:
+    output_file = file.replace(".jack", "T.xml")
+    with open(output_file, 'w') as f:
+        f.write("<tokens>\r\n")
+        tokenizer = JackTokenizer(content)
+        while tokenizer.hasMoreTokens():
+            tokenizer.advance()
+            token = tokenizer.currentToken()
+            token_type = token.getTokenType().value.lower()
+            token_value = token.getToken()
+            
+            # Handle special XML characters
+            if token_type == "symbol":
+                if token_value == "<":
+                    token_value = "&lt;"
+                elif token_value == ">":
+                    token_value = "&gt;"
+                elif token_value == "&":
+                    token_value = "&amp;"
+            
+            if token_type == "integer":
+                token_type = "integerConstant"
+            elif token_type == "string":
+                token_type = "stringConstant"
+
+            f.write(f"<{token_type}> {token_value} </{token_type}>\r\n")
+        f.write("</tokens>\r\n")
+
 def process_files(jack_files: list[str], test_tokenizer: bool):
     for file in jack_files:
         print(f"Processing file: {file}")
-
+        with open(file, 'r') as f:
+            content = f.read()
+        
+        tokenizer = JackTokenizer(content)
+        
+        while tokenizer.hasMoreTokens():
+            tokenizer.advance()
+            current_token = tokenizer.currentToken()
+            print(current_token)
         
         if test_tokenizer:
             print("Running tokenizer test mode")
+            tokenizer_test(file, content)
             # Add tokenizer test code here
         else:
             print("Running analyzer mode")

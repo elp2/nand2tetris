@@ -49,8 +49,8 @@ class JackTokenizer:
 
         while True:
             if "/*" in self.content:
-                start = self.content.find("/*") 
-                end = self.content.find("*/")
+                start = self.content.find("/*")
+                end = self.content.find("*/", start)
                 if end == -1:
                     raise Exception("Unterminated comment")
                 self.content = self.content[:start] + self.content[end + 2:]
@@ -59,7 +59,7 @@ class JackTokenizer:
         while True:
             if "//" in self.content:
                 start = self.content.find("//")
-                end = self.content.find("\n")
+                end = self.content.find("\n", start)
                 if end == -1:
                     raise Exception("Unterminated comment")
                 self.content = self.content[:start] + self.content[end:]
