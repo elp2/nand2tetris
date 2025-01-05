@@ -24,6 +24,16 @@ def compilation_engine_test(file: str, content: str) -> None:
         for line in engine.output:
             f.write(line + "\r\n")
 
+def compile(file: str, content: str) -> None:
+    xml_output_file = file.replace(".jack", ".xml")
+    vm_output_file = file.replace(".jack", ".vm")
+    engine = CompilationEngine(content)
+    engine.compile()
+    with open(xml_output_file, 'w') as f:
+        for line in engine.output:
+            f.write(line + "\r\n")
+    engine.vm_writer.write(vm_output_file)
+
 def process_files(jack_files: list[str], test_tokenizer: bool, test_compilation_engine: bool):
     for file in jack_files:
         print(f"Processing file: {file}")
@@ -39,12 +49,11 @@ def process_files(jack_files: list[str], test_tokenizer: bool, test_compilation_
             print("Running compilation engine test mode")
             compilation_engine_test(file, content)
         else:
-            print("TODO: Non-test mode")
-            assert False
+            print("Compile mode")
+            compile(file, content)
 
 def main():
-    # Set up argument parser
-    parser = argparse.ArgumentParser(description='Analyze Jack files')
+    parser = argparse.ArgumentParser(description='Compile Jack files')
     parser.add_argument('--test_tokenizer', action='store_true',
                       help='run in tokenizer test mode')
     parser.add_argument('--test_compilation_engine', action='store_true',

@@ -1,4 +1,6 @@
 from jack_tokenizer import JackTokenizer, JackToken
+from symbol_table import SymbolTable, Symbol
+from vm_writer import VMWriter
 
 OPS = ["+", "-", "*", "/", "&", "|", "<", ">", "="]
 UNARY_OPS = ["-", "~"]
@@ -12,7 +14,14 @@ class CompilationEngine:
         self.tokenizer.advance()
         self.output = []
         self.indent_level = 0
-        
+
+        self.class_symbol_table = SymbolTable()
+        self.subroutine_symbol_table = SymbolTable()
+        self.class_name = None
+        self.subroutine_name = None
+
+        self.vm_writer = VMWriter()
+
     def compile(self):
         """Compile the Jack code and write the output XML"""
         while self.tokenizer.has_more_tokens():
@@ -23,7 +32,7 @@ class CompilationEngine:
         self.indent_level = 0
         self._write_rule_start("class")
         self.process(JackToken.TokenType.KEYWORD, "class")
-        className = self.process(JackToken.TokenType.IDENTIFIER)
+        self.class_name = self.process(JackToken.TokenType.IDENTIFIER)
         self.process(JackToken.TokenType.SYMBOL, "{")
         while (self.tokenizer.get_current_token().get_token_type() == JackToken.TokenType.KEYWORD and 
                self.tokenizer.get_current_token().get_token() in ["static", "field"]):
@@ -37,14 +46,21 @@ class CompilationEngine:
     def compile_class_var_dec(self):
         """Compile a class variable declaration"""
         self._write_rule_start("classVarDec")
-        static_field = self.process(JackToken.TokenType.KEYWORD, ["static", "field"])
+        STATIC_FIELD = {"static": Symbol.Kind.STATIC, "field": Symbol.Kind.FIELD}
+        kind = STATIC_FIELD[self.process(JackToken.TokenType.KEYWORD, ["static", "field"]).get_token()]
+
         var_type = self.process_var_type()
         var_names = []
         var_names.append(self.process(JackToken.TokenType.IDENTIFIER))
         while self.tokenizer.get_current_token().get_token() == ",":
             self.process(JackToken.TokenType.SYMBOL, ",")
             var_names.append(self.process(JackToken.TokenType.IDENTIFIER))
+
         self.process(JackToken.TokenType.SYMBOL, ";")
+        for var_name in var_names:
+            self.class_symbol_table.define(var_name, var_type, kind)
+            self.output.append(f"{self._indent()}{var_name} {var_type} {kind.value} CREATED")
+
         self._write_rule_end("classVarDec")
     
     def compile_subroutine(self):
@@ -57,11 +73,14 @@ class CompilationEngine:
         else:
             subroutine_type = self.process_var_type()
 
-        subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
+        self.subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
+
         self.process(JackToken.TokenType.SYMBOL, "(")
         self.compile_parameter_list()
         self.process(JackToken.TokenType.SYMBOL, ")")
+
         self.compile_subroutine_body()
+
         self._write_rule_end("subroutineDec")
     
     def compile_parameter_list(self):
@@ -85,10 +104,19 @@ class CompilationEngine:
         """Compile a subroutine body"""
         self._write_rule_start("subroutineBody")
         self.process(JackToken.TokenType.SYMBOL, "{")
+
+        vars = []
         while (self.tokenizer.get_current_token().get_token_type() == JackToken.TokenType.KEYWORD and
                self.tokenizer.get_current_token().get_token() in ["var"]):
-            self.compile_var_dec()
+            vars.append(self.compile_var_dec())
+        self.vm_writer.write_function(self.class_name, self.subroutine_name, len(vars))
+        for (var_type, var_names) in vars:
+            for var_name in var_names:
+                self.subroutine_symbol_table.define(var_name, var_type, Symbol.Kind.VAR)
+                self.output.append(f"{self._indent()}{var_name} {var_type} VAR CREATED")
+
         self.compile_statements()
+
         self.process(JackToken.TokenType.SYMBOL, "}")
         self._write_rule_end("subroutineBody")
     
@@ -97,12 +125,14 @@ class CompilationEngine:
         self._write_rule_start("varDec")
         self.process(JackToken.TokenType.KEYWORD, "var")
         var_type = self.process_var_type()
-        var_name = self.process(JackToken.TokenType.IDENTIFIER)
+        var_names = [self.process(JackToken.TokenType.IDENTIFIER)]
         while self.tokenizer.get_current_token().get_token() == ",":
             self.process(JackToken.TokenType.SYMBOL, ",")
-            var_name = self.process(JackToken.TokenType.IDENTIFIER)
+            var_names.append(self.process(JackToken.TokenType.IDENTIFIER))
         self.process(JackToken.TokenType.SYMBOL, ";")
         self._write_rule_end("varDec")
+
+        return (var_type, var_names)
     
     def compile_statements(self):
         """Compile a statement"""
@@ -177,7 +207,9 @@ class CompilationEngine:
         """Compile a do statement"""
         self._write_rule_start("doStatement")
         self.process(JackToken.TokenType.KEYWORD, "do")
+
         self.compile_subroutine_call(self.process())
+
         self.process(JackToken.TokenType.SYMBOL, ";")
         self._write_rule_end("doStatement")
 
@@ -185,8 +217,11 @@ class CompilationEngine:
         """Compile a return statement"""
         self._write_rule_start("returnStatement")
         self.process(JackToken.TokenType.KEYWORD, "return")
+        void_return = True
         if self.tokenizer.get_current_token().get_token() != ";":
             self.compile_expression()
+            void_return = False
+        self.vm_writer.write_return(void_return)
         self.process(JackToken.TokenType.SYMBOL, ";")
         self._write_rule_end("returnStatement")
     
@@ -196,22 +231,29 @@ class CompilationEngine:
     
         self.compile_term()
         while self.tokenizer.get_current_token().get_token() in OPS:
-            self.process(JackToken.TokenType.SYMBOL, OPS)
+            op = self.process(JackToken.TokenType.SYMBOL, OPS)
             self.compile_term()
+            self.vm_writer.write_arithmetic(op.get_token())
 
         self._write_rule_end("expression")
 
     def compile_expression_list(self):
         """Compile an expression list"""
         self._write_rule_start("expressionList")
+
+        n_expressions = 0
+
         if self.tokenizer.get_current_token().get_token() == ")":
             self._write_rule_end("expressionList")
-            return
+            return 0
         self.compile_expression()
+        n_expressions += 1
         while self.tokenizer.get_current_token().get_token() == ",":
             self.process(JackToken.TokenType.SYMBOL, ",")
             self.compile_expression()
+            n_expressions += 1
         self._write_rule_end("expressionList")
+        return n_expressions
 
     def compile_subroutine_call(self, t1: JackToken):
         """Compile a subroutine call"""
@@ -223,17 +265,18 @@ class CompilationEngine:
             self.process(JackToken.TokenType.SYMBOL, ".")
             subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
             self.process(JackToken.TokenType.SYMBOL, "(")
-            self.compile_expression_list()
+            n_args = self.compile_expression_list()
             self.process(JackToken.TokenType.SYMBOL, ")")
         elif next_token.get_token() == "(":
             # subroutineNem "(" expressionList ")"
-            class_var_name = None
+            class_var_name = self.class_name
             subroutine_name = t1.get_token()
             self.process(JackToken.TokenType.SYMBOL, "(")
-            self.compile_expression_list()
+            n_args = self.compile_expression_list()
             self.process(JackToken.TokenType.SYMBOL, ")")
         else:
             assert False
+        self.vm_writer.write_call(class_var_name, subroutine_name, n_args)
 
     def compile_term(self):
         """Compile a term"""
@@ -259,17 +302,15 @@ class CompilationEngine:
         elif next_token.get_token() in [".", "("]:
             self.compile_subroutine_call(t1)
         elif t1.get_token_type() == JackToken.TokenType.INTEGER:
-            # integerConstant
-            # TODO: handle integer constants.
-            pass
+            self.vm_writer.write_push("constant", t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.STRING:
-            # stringConstant
             # TODO: handle string constants.
+            print("UNHANDLED STRING CONSTANT", t1.get_token())
             pass
         elif t1.get_token() in KEYWORD_CONSTANTS:
-            # keywordConstant
             # TODO: handle keyword constants.
             keyword_constant = t1.get_token()
+            print("UNHANDLED KEYWORD CONSTANT", keyword_constant)
             pass
         else:
             var_name = t1.get_token()
