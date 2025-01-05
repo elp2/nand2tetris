@@ -5,10 +5,9 @@ UNARY_OPS = ["-", "~"]
 KEYWORD_CONSTANTS = ["true", "false", "null", "this"]
 
 class CompilationEngine:
-    def __init__(self, content: str, output_filename: str):
+    def __init__(self, content: str):
         """Initialize the compilation engine with Jack source content and output file"""
         self.content = content
-        self.output_file = output_filename
         self.tokenizer = JackTokenizer(content)
         self.tokenizer.advance()
         self.output = []
@@ -132,7 +131,12 @@ class CompilationEngine:
         self._write_rule_start("letStatement")
         self.process(JackToken.TokenType.KEYWORD, "let")
         var_name = self.process(JackToken.TokenType.IDENTIFIER)
-        # TODO: handle array indexing.
+        if self.tokenizer.get_current_token().get_token() == "[":
+            # arrayName "[" expression "]"
+            array_name = var_name
+            self.process(JackToken.TokenType.SYMBOL, "[")
+            self.compile_expression()
+            self.process(JackToken.TokenType.SYMBOL, "]")
         self.process(JackToken.TokenType.SYMBOL, "=")
         self.compile_expression()
         self.process(JackToken.TokenType.SYMBOL, ";")
@@ -233,7 +237,6 @@ class CompilationEngine:
 
     def compile_term(self):
         """Compile a term"""
-        # TODO: more complex term handling.
         self._write_rule_start("term")
 
         # Lookahead for LL(2) parsing edge case.
@@ -245,8 +248,6 @@ class CompilationEngine:
             self.process(JackToken.TokenType.SYMBOL, "[")
             self.compile_expression()
             self.process(JackToken.TokenType.SYMBOL, "]")
-        elif next_token.get_token() in [".", "("]:
-            self.compile_subroutine_call(t1)
         elif t1.get_token() == "(":
             # ( expression )
             self.compile_expression()
@@ -255,12 +256,16 @@ class CompilationEngine:
             # unaryOp term
             # TODO: handle t1 unary.
             self.compile_term()
+        elif next_token.get_token() in [".", "("]:
+            self.compile_subroutine_call(t1)
         elif t1.get_token_type() == JackToken.TokenType.INTEGER:
             # integerConstant
-            self.process(JackToken.TokenType.INTEGER)
+            # TODO: handle integer constants.
+            pass
         elif t1.get_token_type() == JackToken.TokenType.STRING:
             # stringConstant
-            self.process(JackToken.TokenType.STRING)
+            # TODO: handle string constants.
+            pass
         elif t1.get_token() in KEYWORD_CONSTANTS:
             # keywordConstant
             # TODO: handle keyword constants.

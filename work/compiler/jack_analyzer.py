@@ -18,7 +18,7 @@ def tokenizer_test(file: str, content: str) -> None:
 
 def compilation_engine_test(file: str, content: str) -> None:
     output_file = file.replace(".jack", ".xml")
-    engine = CompilationEngine(content, output_file)
+    engine = CompilationEngine(content)
     engine.compile()
     with open(output_file, 'w') as f:
         for line in engine.output:
