@@ -3,10 +3,14 @@ from enum import Enum
 
 class Symbol:
     class Kind(Enum):
-        STATIC = "STATIC"
-        FIELD = "FIELD" 
-        ARG = "ARG"
-        VAR = "VAR"
+        STATIC = "static"
+        FIELD = "this"
+        ARG = "argument"
+        VAR = "local"
+        CONSTANT = "constant"
+
+        def to_vm_segment(self) -> str:
+            return self.value
         
     def __init__(self, name: str, ptype: str, kind: Kind, index: int):
         self.name = name
@@ -20,6 +24,11 @@ class Symbol:
     def __repr__(self):
         return self.__str__()
 
+    def get_kind(self) -> Kind:
+        return self.kind
+
+    def get_index(self) -> int:
+        return self.index
 
 class SymbolTable:
     def __init__(self):
@@ -35,8 +44,8 @@ class SymbolTable:
 
     def var_count(self, kind: Symbol.Kind) -> int:
         return len(self.by_kind[kind])
-
-    def get(self, name: str) -> Symbol:
+        
+    def __getitem__(self, name: str) -> Symbol:
         return self.by_name[name]
 
     def __contains__(self, key):

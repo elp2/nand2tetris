@@ -100,11 +100,15 @@ class CompilationEngine:
 
         var_type = self.process_var_type()
         var_name = self.process(JackToken.TokenType.IDENTIFIER)
+        self.subroutine_symbol_table.define(var_name, var_type, Symbol.Kind.ARG)
+        self.output.append(f"{self._indent()}{var_name} {var_type} ARG CREATED")
 
         while self.tokenizer.get_current_token().get_token() == ",":
             self.process(JackToken.TokenType.SYMBOL, ",")
             var_type = self.process_var_type()
             var_name = self.process(JackToken.TokenType.IDENTIFIER)
+            self.subroutine_symbol_table.define(var_name, var_type, Symbol.Kind.ARG)
+            self.output.append(f"{self._indent()}{var_name} {var_type} ARG CREATED")
 
         self._write_rule_end("parameterList")
     
@@ -177,6 +181,10 @@ class CompilationEngine:
             self.process(JackToken.TokenType.SYMBOL, "]")
         self.process(JackToken.TokenType.SYMBOL, "=")
         self.compile_expression()
+
+        symbol = self._get_from_symbol_table(var_name)
+        self.vm_writer.write_pop(symbol.get_kind().to_vm_segment(), symbol.get_index())
+
         self.process(JackToken.TokenType.SYMBOL, ";")
         self._write_rule_end("letStatement")
 
@@ -339,7 +347,7 @@ class CompilationEngine:
         elif next_token.get_token() in [".", "("]:
             self.compile_subroutine_call(t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.INTEGER:
-            self.vm_writer.write_push("constant", t1.get_token())
+            self.vm_writer.write_push(Symbol.Kind.CONSTANT.to_vm_segment(), t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.STRING:
             # TODO: handle string constants.
             print("UNHANDLED STRING CONSTANT", t1)
@@ -348,6 +356,8 @@ class CompilationEngine:
             self.vm_writer.write_keyword_constant(t1.get_token())
         else:
             var_name = t1.get_token()
+            symbol = self._get_from_symbol_table(var_name)
+            self.vm_writer.write_push(symbol.get_kind().to_vm_segment(), symbol.get_index())
 
         self._write_rule_end("term")
 
