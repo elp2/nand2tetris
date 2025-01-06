@@ -77,6 +77,7 @@ class CompilationEngine:
             subroutine_type = self.process_var_type()
 
         self.subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
+        self.subroutine_symbol_table = SymbolTable()
 
         self.process(JackToken.TokenType.SYMBOL, "(")
         self.compile_parameter_list()
@@ -121,11 +122,11 @@ class CompilationEngine:
         while (self.tokenizer.get_current_token().get_token_type() == JackToken.TokenType.KEYWORD and
                self.tokenizer.get_current_token().get_token() in ["var"]):
             vars.append(self.compile_var_dec())
-        self.vm_writer.write_function(self.class_name, self.subroutine_name, len(vars))
         for (var_type, var_names) in vars:
             for var_name in var_names:
                 self.subroutine_symbol_table.define(var_name, var_type, Symbol.Kind.VAR)
                 self.output.append(f"{self._indent()}{var_name} {var_type} VAR CREATED")
+        self.vm_writer.write_function(self.class_name, self.subroutine_name, self.subroutine_symbol_table.get_n_locals())
 
         self.compile_statements()
 
@@ -342,8 +343,8 @@ class CompilationEngine:
             self.process(JackToken.TokenType.SYMBOL, ")")
         elif t1.get_token() in UNARY_OPS:
             # unaryOp term
-            # TODO: handle t1 unary.
             self.compile_term()
+            self.vm_writer.write_unary_op(t1.get_token())
         elif next_token.get_token() in [".", "("]:
             self.compile_subroutine_call(t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.INTEGER:

@@ -50,3 +50,6 @@ class SymbolTable:
 
     def __contains__(self, key):
         return key in self.by_name
+
+    def get_n_locals(self) -> int:
+        return len(self.by_kind[Symbol.Kind.VAR])

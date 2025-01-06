@@ -30,11 +30,12 @@ class VMWriter:
         self.output.append(f"function {class_name}.{subroutine_name} {n_vars}")
     
     def write_return(self, void_return: bool) -> None:
-        self.output.append("pop temp 0")
-
         if void_return:
             self.output.append("push constant 0")
         self.output.append("return")
+        if void_return:
+            self.output.append("pop temp 0")
+
 
     def write_arithmetic(self, op: str) -> None:
         if op == "+":
@@ -68,6 +69,14 @@ class VMWriter:
             self.output.append("push constant 0")
         elif keyword_constant == "this":
             self.output.append("push pointer 0")
+        else:
+            assert False
+
+    def write_unary_op(self, op: str) -> None:
+        if op == "-":
+            self.output.append("neg")
+        elif op == "~":
+            self.output.append("not")
         else:
             assert False
 
