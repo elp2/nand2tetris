@@ -35,4 +35,9 @@ class SymbolTable:
 
     def var_count(self, kind: Symbol.Kind) -> int:
         return len(self.by_kind[kind])
-    
+
+    def get(self, name: str) -> Symbol:
+        return self.by_name[name]
+
+    def __contains__(self, key):
+        return key in self.by_name

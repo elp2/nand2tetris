@@ -47,7 +47,7 @@ class CompilationEngine:
         """Compile a class variable declaration"""
         self._write_rule_start("classVarDec")
         STATIC_FIELD = {"static": Symbol.Kind.STATIC, "field": Symbol.Kind.FIELD}
-        kind = STATIC_FIELD[self.process(JackToken.TokenType.KEYWORD, ["static", "field"]).get_token()]
+        kind = STATIC_FIELD[self.process(JackToken.TokenType.KEYWORD, ["static", "field"])]
 
         var_type = self.process_var_type()
         var_names = []
@@ -66,6 +66,9 @@ class CompilationEngine:
     def compile_subroutine(self):
         """Compile a subroutine"""
         self._write_rule_start("subroutineDec")
+
+        self.return_counter = 0
+
         constructorFunctionMethod = self.process(JackToken.TokenType.KEYWORD, ["constructor", "function", "method"])
         
         if self.tokenizer.get_current_token().get_token() == "void":
@@ -82,6 +85,11 @@ class CompilationEngine:
         self.compile_subroutine_body()
 
         self._write_rule_end("subroutineDec")
+
+    def get_next_label(self, description: str):
+        """Get the next label"""
+        self.return_counter += 1
+        return f"{self.class_name}.{self.subroutine_name}${description}{self.return_counter}"
     
     def compile_parameter_list(self):
         """Compile a parameter list"""
@@ -175,32 +183,61 @@ class CompilationEngine:
     def compile_if_statement(self):
         """Compile an if statement"""
         self._write_rule_start("ifStatement")
+
+        label_else = self.get_next_label("else")
+        label_done = self.get_next_label("done")
+
         self.process(JackToken.TokenType.KEYWORD, "if")
         self.process(JackToken.TokenType.SYMBOL, "(")
+
         self.compile_expression()
+        self.vm_writer.write_raw_TODO_REMOVE("not")
+        self.vm_writer.write_if(label_else)
+
         self.process(JackToken.TokenType.SYMBOL, ")")
         self.process(JackToken.TokenType.SYMBOL, "{")
+
         self.compile_statements()
+        self.vm_writer.write_goto(label_done)
+
         self.process(JackToken.TokenType.SYMBOL, "}")
 
         if self.tokenizer.get_current_token().get_token() == "else":
+            self.vm_writer.write_label(label_else)
             self.process(JackToken.TokenType.KEYWORD, "else")
             self.process(JackToken.TokenType.SYMBOL, "{")
             self.compile_statements()
             self.process(JackToken.TokenType.SYMBOL, "}")
-            
+
+        self.vm_writer.write_label(label_done)
+
         self._write_rule_end("ifStatement")
 
     def compile_while_statement(self):
         """Compile a while statement"""
         self._write_rule_start("whileStatement")
+
+        label_start = self.get_next_label("whileStart")
+        label_end = self.get_next_label("whileEnd")
+
         self.process(JackToken.TokenType.KEYWORD, "while")
         self.process(JackToken.TokenType.SYMBOL, "(")
+
+        self.vm_writer.write_label(label_start)
         self.compile_expression()
+        self.vm_writer.write_raw_TODO_REMOVE("not")
+        self.vm_writer.write_if(label_end)
+
         self.process(JackToken.TokenType.SYMBOL, ")")
         self.process(JackToken.TokenType.SYMBOL, "{")
+
         self.compile_statements()
+
         self.process(JackToken.TokenType.SYMBOL, "}")
+
+        self.vm_writer.write_goto(label_start)
+        self.vm_writer.write_label(label_end)
+
         self._write_rule_end("whileStatement")
 
     def compile_do_statement(self):
@@ -233,7 +270,7 @@ class CompilationEngine:
         while self.tokenizer.get_current_token().get_token() in OPS:
             op = self.process(JackToken.TokenType.SYMBOL, OPS)
             self.compile_term()
-            self.vm_writer.write_arithmetic(op.get_token())
+            self.vm_writer.write_arithmetic(op)
 
         self._write_rule_end("expression")
 
@@ -255,13 +292,13 @@ class CompilationEngine:
         self._write_rule_end("expressionList")
         return n_expressions
 
-    def compile_subroutine_call(self, t1: JackToken):
+    def compile_subroutine_call(self, t1: str):
         """Compile a subroutine call"""
         # Does not print rule name.
         next_token = self.tokenizer.get_current_token()
         if next_token.get_token() == ".":
             # (className | varName) "." subroutineName "(" expressionList ")"
-            class_var_name = t1.get_token()
+            class_var_name = t1
             self.process(JackToken.TokenType.SYMBOL, ".")
             subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
             self.process(JackToken.TokenType.SYMBOL, "(")
@@ -270,7 +307,7 @@ class CompilationEngine:
         elif next_token.get_token() == "(":
             # subroutineNem "(" expressionList ")"
             class_var_name = self.class_name
-            subroutine_name = t1.get_token()
+            subroutine_name = t1
             self.process(JackToken.TokenType.SYMBOL, "(")
             n_args = self.compile_expression_list()
             self.process(JackToken.TokenType.SYMBOL, ")")
@@ -283,11 +320,11 @@ class CompilationEngine:
         self._write_rule_start("term")
 
         # Lookahead for LL(2) parsing edge case.
-        t1 = self.process()
+        t1 = self.process_token()
         next_token = self.tokenizer.get_current_token()
         if next_token.get_token() == "[":
             # arrayName "[" expression "]"
-            array_name = t1.get_token()
+            array_name = t1
             self.process(JackToken.TokenType.SYMBOL, "[")
             self.compile_expression()
             self.process(JackToken.TokenType.SYMBOL, "]")
@@ -300,18 +337,15 @@ class CompilationEngine:
             # TODO: handle t1 unary.
             self.compile_term()
         elif next_token.get_token() in [".", "("]:
-            self.compile_subroutine_call(t1)
+            self.compile_subroutine_call(t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.INTEGER:
             self.vm_writer.write_push("constant", t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.STRING:
             # TODO: handle string constants.
-            print("UNHANDLED STRING CONSTANT", t1.get_token())
+            print("UNHANDLED STRING CONSTANT", t1)
             pass
         elif t1.get_token() in KEYWORD_CONSTANTS:
-            # TODO: handle keyword constants.
-            keyword_constant = t1.get_token()
-            print("UNHANDLED KEYWORD CONSTANT", keyword_constant)
-            pass
+            self.vm_writer.write_keyword_constant(t1.get_token())
         else:
             var_name = t1.get_token()
 
@@ -324,7 +358,7 @@ class CompilationEngine:
             return self.process(JackToken.TokenType.IDENTIFIER)
         return self.process(JackToken.TokenType.KEYWORD, ["int", "char", "boolean"])
 
-    def process(self, expected_type: JackToken.TokenType = None, expected_values = None):
+    def process_token(self, expected_type: JackToken.TokenType = None, expected_values = None):
         """Processes a token, and compares it to expected. Returns the token for the caller to use if needed."""
         token = self.tokenizer.get_current_token()
         if expected_type and token.get_token_type() != expected_type:
@@ -338,6 +372,11 @@ class CompilationEngine:
         if self.tokenizer.has_more_tokens():
             self.tokenizer.advance()
         return token
+
+    def process(self, expected_type: JackToken.TokenType = None, expected_values = None):
+        """Processes a token, and compares it to expected. Returns the token for the caller to use if needed."""
+        return self.process_token(expected_type, expected_values).get_token()
+
     
     def write_output(self):
         """Write the compiled output to the XML file"""
@@ -362,3 +401,13 @@ class CompilationEngine:
         """Write the end of a rule"""
         self.indent_level -= 1
         self.output.append(f"{self._indent()}</{rule}>")
+
+    def _get_from_symbol_table(self, symbol: str):
+        """Get a symbol from the symbol table"""
+        if symbol in self.subroutine_symbol_table:
+            return self.subroutine_symbol_table[symbol]
+        if symbol in self.class_symbol_table:
+            return self.class_symbol_table[symbol]
+        
+        assert False, f"Symbol {symbol} not found in symbol table"
+        return None
