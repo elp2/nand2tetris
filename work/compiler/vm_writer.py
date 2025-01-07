@@ -26,8 +26,11 @@ class VMWriter:
     def write_call(self, class_name: str, subroutine_name: str, n_args: int) -> None:
         self.output.append(f"call {class_name}.{subroutine_name} {n_args}")
     
-    def write_function(self, class_name: str, subroutine_name: str, n_vars: int) -> None:
+    def write_function(self, class_name: str, subroutine_name: str, n_vars: int, function_type: str) -> None:
         self.output.append(f"function {class_name}.{subroutine_name} {n_vars}")
+        if function_type == "method":
+            self.output.append("push argument 0")
+            self.output.append("pop pointer 0")
     
     def write_return(self, void_return: bool) -> None:
         if void_return:
@@ -35,7 +38,6 @@ class VMWriter:
         self.output.append("return")
         if void_return:
             self.output.append("pop temp 0")
-
 
     def write_arithmetic(self, op: str) -> None:
         if op == "+":

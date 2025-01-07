@@ -8,6 +8,7 @@ class Symbol:
         ARG = "argument"
         VAR = "local"
         CONSTANT = "constant"
+        POINTER = "pointer"
 
         def to_vm_segment(self) -> str:
             return self.value
@@ -23,6 +24,9 @@ class Symbol:
 
     def __repr__(self):
         return self.__str__()
+
+    def get_type(self) -> str:
+        return self.type
 
     def get_kind(self) -> Kind:
         return self.kind
@@ -53,3 +57,9 @@ class SymbolTable:
 
     def get_n_locals(self) -> int:
         return len(self.by_kind[Symbol.Kind.VAR])
+
+    def get_n_fields(self) -> int:
+        return len(self.by_kind[Symbol.Kind.FIELD])
+
+    def get_n_args(self) -> int:
+        return len(self.by_kind[Symbol.Kind.ARG])

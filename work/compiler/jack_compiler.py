@@ -40,8 +40,6 @@ def process_files(jack_files: list[str], test_tokenizer: bool, test_compilation_
         with open(file, 'r') as f:
             content = f.read()
         
-        tokenizer = JackTokenizer(content)
-        
         if test_tokenizer:
             print("Running tokenizer test mode")
             tokenizer_test(file, content)

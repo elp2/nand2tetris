@@ -69,15 +69,20 @@ class CompilationEngine:
 
         self.return_counter = 0
 
-        constructorFunctionMethod = self.process(JackToken.TokenType.KEYWORD, ["constructor", "function", "method"])
+        self.constructor_function_method = self.process(JackToken.TokenType.KEYWORD, ["constructor", "function", "method"])
         
         if self.tokenizer.get_current_token().get_token() == "void":
-            subroutine_type = self.process(JackToken.TokenType.KEYWORD)
+            subroutine_return_type = self.process(JackToken.TokenType.KEYWORD)
         else:
-            subroutine_type = self.process_var_type()
+            subroutine_return_type = self.process_var_type()
 
         self.subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
         self.subroutine_symbol_table = SymbolTable()
+
+        if self.constructor_function_method == "method":
+            self.subroutine_symbol_table.define("this", self.class_name, Symbol.Kind.ARG)
+            self.output.append(f"{self._indent()}this {self.class_name} ARG CREATED")
+
 
         self.process(JackToken.TokenType.SYMBOL, "(")
         self.compile_parameter_list()
@@ -126,7 +131,12 @@ class CompilationEngine:
             for var_name in var_names:
                 self.subroutine_symbol_table.define(var_name, var_type, Symbol.Kind.VAR)
                 self.output.append(f"{self._indent()}{var_name} {var_type} VAR CREATED")
-        self.vm_writer.write_function(self.class_name, self.subroutine_name, self.subroutine_symbol_table.get_n_locals())
+        self.vm_writer.write_function(self.class_name, self.subroutine_name, self.subroutine_symbol_table.get_n_locals(), self.constructor_function_method)
+        
+        if self.constructor_function_method == "constructor":
+            self.vm_writer.write_push(Symbol.Kind.CONSTANT.to_vm_segment(), self.class_symbol_table.get_n_fields())
+            self.vm_writer.write_call("Memory", "alloc", 1)
+            self.vm_writer.write_pop(Symbol.Kind.POINTER.to_vm_segment(), 0)
 
         self.compile_statements()
 
@@ -217,6 +227,8 @@ class CompilationEngine:
             self.process(JackToken.TokenType.SYMBOL, "{")
             self.compile_statements()
             self.process(JackToken.TokenType.SYMBOL, "}")
+        else:
+            self.vm_writer.write_label(label_else)
 
         self.vm_writer.write_label(label_done)
 
@@ -283,21 +295,29 @@ class CompilationEngine:
 
         self._write_rule_end("expression")
 
-    def compile_expression_list(self):
+    def compile_expression_list(self, target: str = None):
         """Compile an expression list"""
         self._write_rule_start("expressionList")
 
-        n_expressions = 0
+        if self._is_variable(target):
+            var = self._get_from_symbol_table(target)
+            self.vm_writer.write_push(var.get_kind().to_vm_segment(), var.get_index())
+            n_expressions = 1
+            target = self._get_from_symbol_table(target).get_type()
+        else:
+            n_expressions = 0
 
         if self.tokenizer.get_current_token().get_token() == ")":
             self._write_rule_end("expressionList")
-            return 0
+            return n_expressions
+
         self.compile_expression()
         n_expressions += 1
         while self.tokenizer.get_current_token().get_token() == ",":
             self.process(JackToken.TokenType.SYMBOL, ",")
             self.compile_expression()
             n_expressions += 1
+
         self._write_rule_end("expressionList")
         return n_expressions
 
@@ -305,23 +325,27 @@ class CompilationEngine:
         """Compile a subroutine call"""
         # Does not print rule name.
         next_token = self.tokenizer.get_current_token()
+
         if next_token.get_token() == ".":
             # (className | varName) "." subroutineName "(" expressionList ")"
             class_var_name = t1
             self.process(JackToken.TokenType.SYMBOL, ".")
             subroutine_name = self.process(JackToken.TokenType.IDENTIFIER)
             self.process(JackToken.TokenType.SYMBOL, "(")
-            n_args = self.compile_expression_list()
+            n_args = self.compile_expression_list(class_var_name)
             self.process(JackToken.TokenType.SYMBOL, ")")
         elif next_token.get_token() == "(":
-            # subroutineNem "(" expressionList ")"
+            
             class_var_name = self.class_name
             subroutine_name = t1
             self.process(JackToken.TokenType.SYMBOL, "(")
-            n_args = self.compile_expression_list()
+            n_args = self.compile_expression_list("this" if self.constructor_function_method == "method" else None)
             self.process(JackToken.TokenType.SYMBOL, ")")
         else:
             assert False
+ 
+        if self._is_variable(class_var_name):
+            class_var_name = self._get_from_symbol_table(class_var_name).get_type()
         self.vm_writer.write_call(class_var_name, subroutine_name, n_args)
 
     def compile_term(self):
@@ -412,6 +436,10 @@ class CompilationEngine:
         """Write the end of a rule"""
         self.indent_level -= 1
         self.output.append(f"{self._indent()}</{rule}>")
+
+    def _is_variable(self, symbol: str):
+        """Check if a symbol is a variable"""
+        return symbol in self.subroutine_symbol_table or symbol in self.class_symbol_table
 
     def _get_from_symbol_table(self, symbol: str):
         """Get a symbol from the symbol table"""
