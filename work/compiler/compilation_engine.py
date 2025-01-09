@@ -304,6 +304,9 @@ class CompilationEngine:
             self.vm_writer.write_push(var.get_kind().to_vm_segment(), var.get_index())
             n_expressions = 1
             target = self._get_from_symbol_table(target).get_type()
+        elif target == "this" and self.constructor_function_method == "constructor":
+            self.vm_writer.write_push(Symbol.Kind.POINTER.to_vm_segment(), 0)
+            n_expressions = 1
         else:
             n_expressions = 0
 
@@ -335,11 +338,10 @@ class CompilationEngine:
             n_args = self.compile_expression_list(class_var_name)
             self.process(JackToken.TokenType.SYMBOL, ")")
         elif next_token.get_token() == "(":
-            
             class_var_name = self.class_name
             subroutine_name = t1
             self.process(JackToken.TokenType.SYMBOL, "(")
-            n_args = self.compile_expression_list("this" if self.constructor_function_method == "method" else None)
+            n_args = self.compile_expression_list("this" if self.constructor_function_method in ["method", "constructor"] else None)
             self.process(JackToken.TokenType.SYMBOL, ")")
         else:
             assert False
