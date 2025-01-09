@@ -376,9 +376,7 @@ class CompilationEngine:
         elif t1.get_token_type() == JackToken.TokenType.INTEGER:
             self.vm_writer.write_push(Symbol.Kind.CONSTANT.to_vm_segment(), t1.get_token())
         elif t1.get_token_type() == JackToken.TokenType.STRING:
-            # TODO: handle string constants.
-            print("UNHANDLED STRING CONSTANT", t1)
-            pass
+            self.vm_writer.write_string(t1.get_token())
         elif t1.get_token() in KEYWORD_CONSTANTS:
             self.vm_writer.write_keyword_constant(t1.get_token())
         else:

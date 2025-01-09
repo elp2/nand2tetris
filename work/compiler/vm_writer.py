@@ -82,6 +82,14 @@ class VMWriter:
         else:
             assert False
 
+    def write_string(self, string: str) -> None:
+        self.output.append(f"push constant {len(string)}")
+        self.output.append("call String.new 1")
+        for char in string:
+            self.output.append(f"push constant {ord(char)}")
+            # This returns the string ptr, no need to repush to stack.
+            self.output.append("call String.appendChar 2")
+
     def write_raw_TODO_REMOVE(self, line: str) -> None:
         self.output.append(line)
 
