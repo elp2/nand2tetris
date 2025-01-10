@@ -186,15 +186,29 @@ class CompilationEngine:
         var_name = self.process(JackToken.TokenType.IDENTIFIER)
         if self.tokenizer.get_current_token().get_token() == "[":
             # arrayName "[" expression "]"
-            array_name = var_name
+            array_var = self._get_from_symbol_table(var_name)
+            self.vm_writer.write_push(array_var.get_kind().to_vm_segment(), array_var.get_index())
             self.process(JackToken.TokenType.SYMBOL, "[")
             self.compile_expression()
             self.process(JackToken.TokenType.SYMBOL, "]")
-        self.process(JackToken.TokenType.SYMBOL, "=")
-        self.compile_expression()
+            self.vm_writer.write_arithmetic("+")
 
-        symbol = self._get_from_symbol_table(var_name)
-        self.vm_writer.write_pop(symbol.get_kind().to_vm_segment(), symbol.get_index())
+            self.process(JackToken.TokenType.SYMBOL, "=")
+            next_token = self.tokenizer.get_current_token()
+
+            self.compile_expression()
+
+            self.vm_writer.write_pop(Symbol.Kind.TEMP.to_vm_segment(), 0)
+            self.vm_writer.write_pop(Symbol.Kind.POINTER.to_vm_segment(), 1)
+            self.vm_writer.write_push(Symbol.Kind.TEMP.to_vm_segment(), 0)
+            self.vm_writer.write_pop(Symbol.Kind.THAT.to_vm_segment(), 0)
+
+        else:
+            self.process(JackToken.TokenType.SYMBOL, "=")
+
+            self.compile_expression()
+            symbol = self._get_from_symbol_table(var_name)
+            self.vm_writer.write_pop(symbol.get_kind().to_vm_segment(), symbol.get_index())
 
         self.process(JackToken.TokenType.SYMBOL, ";")
         self._write_rule_end("letStatement")
@@ -359,10 +373,18 @@ class CompilationEngine:
         next_token = self.tokenizer.get_current_token()
         if next_token.get_token() == "[":
             # arrayName "[" expression "]"
-            array_name = t1
+            array_name = t1.get_token()
+            array_var = self._get_from_symbol_table(array_name)
+            assert array_var.get_type() == "Array", f"Array {array_name} is not an array"
+            self.vm_writer.write_push(array_var.get_kind().to_vm_segment(), array_var.get_index())
+            
             self.process(JackToken.TokenType.SYMBOL, "[")
             self.compile_expression()
             self.process(JackToken.TokenType.SYMBOL, "]")
+            self.vm_writer.write_arithmetic("+")
+            self.vm_writer.write_pop(Symbol.Kind.POINTER.to_vm_segment(), 1)
+            self.vm_writer.write_push(Symbol.Kind.THAT.to_vm_segment(), 0)
+
         elif t1.get_token() == "(":
             # ( expression )
             self.compile_expression()

@@ -9,7 +9,9 @@ class Symbol:
         VAR = "local"
         CONSTANT = "constant"
         POINTER = "pointer"
-
+        THIS = "this"
+        THAT = "that"
+        TEMP = "temp"
         def to_vm_segment(self) -> str:
             return self.value
         

@@ -90,6 +90,15 @@ class VMWriter:
             # This returns the string ptr, no need to repush to stack.
             self.output.append("call String.appendChar 2")
 
+    def write_let_array(self) -> None:
+        self.output.append("pop pointer 1 // THAT = address of b[j]")
+        self.output.append("push that 0 // stack top = b[j]")
+        self.output.append("pop temp 0 // temp 0 = b[j]")
+        self.output.append("pop pointer 1 // THAT = address of a[i]")
+        self.output.append("push temp 0 // stack top = b[j]")
+        self.output.append("pop that 0 // a[i] = b[j]")
+
+
     def write_raw_TODO_REMOVE(self, line: str) -> None:
         self.output.append(line)
 
