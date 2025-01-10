@@ -281,6 +281,8 @@ class CompilationEngine:
         self.process(JackToken.TokenType.KEYWORD, "do")
 
         self.compile_subroutine_call(self.process())
+        # Ignore the return value.
+        self.vm_writer.write_pop(Symbol.Kind.TEMP.to_vm_segment(), 0)
 
         self.process(JackToken.TokenType.SYMBOL, ";")
         self._write_rule_end("doStatement")

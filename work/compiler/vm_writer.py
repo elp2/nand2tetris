@@ -36,8 +36,6 @@ class VMWriter:
         if void_return:
             self.output.append("push constant 0")
         self.output.append("return")
-        if void_return:
-            self.output.append("pop temp 0")
 
     def write_arithmetic(self, op: str) -> None:
         if op == "+":
