@@ -1,0 +1,87 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    static int ram;
+    static int heap;
+    static int freeList;
+
+    /** Initializes the class. */
+    function void init() {
+        let ram = 0;
+        let heap = 2048;
+        let freeList = heap;
+
+        let ram[heap] = 0;
+        let ram[heap + 1] = 32767 - heap - 2;
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        return ram[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function Array alloc(int size) {
+        var int blockSize, blockAddr, newBlockSize;
+        let blockAddr = freeList;
+
+        // Find the first free item.
+        while (true) {
+            let blockSize = ram[blockAddr + 1];
+            if (blockSize > size + 1) {
+                let newBlockSize = blockSize - size - 2;
+                let ram[blockAddr + 2 + size] = ram[blockAddr];
+                let ram[blockAddr + 3 + size] = ram[newBlockSize];
+
+                if (freeList = blockAddr) {
+                    let freeList = blockAddr + 2 + size;
+                }
+
+                return blockAddr + 1;
+            } else {
+                let blockAddr = ram[blockAddr];
+            }
+            if (blockAddr = 0) {
+                // Couldn't find space. Hang.
+                while (true) {}
+            }
+        }
+        return -1;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        var int addr;
+        var int freeAddr;
+        var int nextAddr;
+        let addr = o - 1;
+        let freeAddr = freeList;
+        // Go through the freelist. Either we hit the one before this, or the end.
+        while (true) {
+            let nextAddr = ram[freeAddr];
+            if (nextAddr = 0) {
+                let ram[freeAddr] = addr;
+                let ram[addr] = 0;
+                return;
+            }
+            let freeAddr = nextAddr;
+        }
+
+        return;
+    }
+}
