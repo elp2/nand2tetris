@@ -75,7 +75,7 @@ class Output {
         do Output.create(64, 7710, 13107, 13107, 15163, 15163, 15163, 6939, 771, 7710, 0, 0);  // @
         do Output.create(63, 7710, 13107, 13107, 6168, 3084, 3084, 0, 3084, 3084, 0, 0);  // ?
 
-        do Output.create(65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);          // A ** TO BE FILLED **
+        do Output.create(65, 3084, 7710, 16191, 13107, 13107, 16191, 13107, 13107, 13107, 0, 0); // A
         do Output.create(66, 7967, 13107, 13107, 13107, 7967, 13107, 13107, 13107, 7967, 0, 0); // B
         do Output.create(67, 7196, 13878, 8995, 771, 771, 771, 8995, 13878, 7196, 0, 0);    // C
         do Output.create(68, 3855, 6939, 13107, 13107, 13107, 13107, 13107, 6939, 3855, 0, 0); // D
@@ -218,6 +218,9 @@ class Output {
             let col = 0;
             let row = row + 1;
         }
+        if (row = 23) {
+            let row = 0;
+        }
         return;
     }
 
@@ -247,6 +250,9 @@ class Output {
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
         let row = row + 1;
+        if (row = 23) {
+            let row = 0;
+        }
         let col = 0;
         return;
     }

@@ -44,5 +44,25 @@ def main():
         ret.append(extractchars(line))
     print("\n".join(ret))
 
-if __name__ == '__main__':
-    main()
+def a():
+    a = """00001100
+           00011110
+           00111111
+           00110011
+           00110011
+           00111111
+           00110011
+           00110011
+           00110011
+           00000000
+           00000000"""
+    a = a.split("\n")
+    assert len(a) == 11
+    a = [n.strip() for n in a]
+    a = [twos_complement(n) for n in a]
+    print(a)
+
+
+# if __name__ == '__main__':
+#     main()
+a()
