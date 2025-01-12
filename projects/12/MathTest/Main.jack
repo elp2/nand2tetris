@@ -8,8 +8,43 @@ class Main {
     // Performs various mathematical operations, using calls to the Math class methods.
     function void main() {
         var Array r;    // Stores the test results;  
-        do Output.printString("Hello, World!");
+
+do Output.printInt(Math.sqrt(32767));
+        do Output.printString(" ");
+
+      do Output.printInt(Math.sqrt(100));
+        do Output.printString(" ");
+      do Output.printInt(Math.sqrt(256));
+
+        do Output.printString(" ");
+      do Output.printInt(Math.sqrt(10000));
+          
+          /*
+
+        do Output.printInt(10*3);
+        do Output.printString(" ");
+        do Output.printInt(Math.multiply(100, 4));
+
+        do Output.printString(" ");
+        do Output.printInt(Math.multiply(35, -1));
+        do Output.printString(" ");
+        do Output.printInt(Math.multiply(-1, 35));
+        do Output.printString(" ");
+        do Output.printInt(Math.multiply(35, -42));
+        do Output.printString(" ");
+        do Output.printInt(Math.multiply(-42, 35));
+        do Output.printString(" ");
+do Output.printInt(Math.multiply(-3, -3));
+        do Output.printInt(10/3);
         do Output.println();
+        do Output.printInt(9/3);
+        do Output.println();
+        do Output.printInt(-3/3);
+        do Output.println();
+        do Output.printInt(100/3);
+        do Output.println();
+        do Output.printInt(6/3);
+        do Output.println(); */
 
         let r = 8000;   // Base address
     

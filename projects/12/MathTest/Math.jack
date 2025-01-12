@@ -37,7 +37,7 @@ class Math {
         let xShifted = x;
         let i = 0;
         while (i < n) {
-            if ((y & powersOfTwo[i])) {
+            if (~((y & powersOfTwo[i]) = 0)) {
                 let sum = sum + xShifted;
             }
             let xShifted = xShifted + xShifted;
@@ -52,25 +52,45 @@ class Math {
      *  an an expression, it handles it by invoking this method.
      *  Thus, x/y and Math.divide(x,y) return the same value. */
     function int divide(int x, int y) {
-        var int quotient;
+        var int quotient, twoQuotient, ret, xlt0, ylt0;
+
+        let xlt0 = x < 0;
+        let ylt0 = y < 0;
+        let x = Math.abs(x);
+        let y = Math.abs(y);
 
         if ((y > x) | (y < 0)) {
             return 0;
         }
 
         let quotient = x / (y + y);
+        let twoQuotient = quotient + quotient;
 
-        if ((x - ((quotient + quotient) * y)) < y) {
-            return (quotient + quotient) + 1;
+        if ((x - (twoQuotient * y)) < y) {
+            let ret = twoQuotient;
         } else {
-            return (quotient + quotient);
+            let ret = twoQuotient + 1;
         }
-        return 0;
+        if (xlt0 = ylt0) {
+            return ret;
+        }
+        return -ret;
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        return 0;
+        var int y, j, yPlus2ToTheJSquared;
+
+        let y = 0;
+        let j = n / 2 - 1;
+        while (j > -1) {
+            let yPlus2ToTheJSquared = (y + powersOfTwo[j]) * (y + powersOfTwo[j]);
+            if ((yPlus2ToTheJSquared > 0) & ~(yPlus2ToTheJSquared > x)) {
+                let y = y + powersOfTwo[j];
+            }
+            let j = j - 1;
+        }
+        return y;
     }
 
     /** Returns the greater value. */
