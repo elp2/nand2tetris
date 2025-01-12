@@ -9,8 +9,8 @@
  * string-oriented operations.
  */
 class String {
-    field int length;
     field Array arr;
+    field int length;
 
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
@@ -63,36 +63,81 @@ class String {
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
-        var int ret, i, mult, digit;
-        let mult = 1;
+        var int ret, i, digit;
         let ret = 0;
 
         if (length = 0) { return 0; }
         if (charAt(0) = 45) {
-            let mult = -1;
             let i = i + 1;
         }
         while (i < length) {
-            let digit = charAt(i) - 49;
+            let digit = charAt(i) - 48;
             if (digit < 0 | digit > 9) {
                 return ret;
             }
-            let ret = ret + digit * mult;
-            let mult = mult * 10;
+            let ret = (10 * ret) + digit;
             let i = i + 1;
+        }
+
+        if (charAt(0) = 45) {
+            let ret = -ret;
         }
         return ret;
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
-        var int ret, i;
+        var int digit, div10;
+        var int idx;
+
         let length = 0;
-        if (val < 0) {
-            let arr[0] = 45;
-            let length = length + 1;
+        if (val < -32767) {
+            // Handle special case of -32768 which can't use the negation method below since +32768 can't be represented.
+            do appendChar(45);
+            do appendChar(51);
+            do appendChar(50);
+            do appendChar(55);
+            do appendChar(54);
+            do appendChar(56);
+            return;
         }
-        return -1; // TODO.
+
+        if (val = 0) {
+            do appendChar(48);
+            return;
+        }
+
+        if (val < 0) {
+            do appendChar(45);
+            let val = -val;
+            let idx = 1;
+        } else {
+            let idx = 0;
+        }
+        if (val > 9) {
+            let idx = idx + 1;
+        }
+        if (val > 99) {
+            let idx = idx + 1;
+        }
+        if (val > 999) {
+            let idx = idx + 1;
+        }
+        if (val > 9999) {
+            let idx = idx + 1;
+        }
+        let length = idx + 1;
+
+
+        while (val > 0) {
+            let div10 = val / 10;
+            let digit = val - (div10 * 10);
+            do setCharAt(idx, digit + 48);
+            let idx = idx - 1;
+            let val = div10;
+        }
+
+        return;
     }
 
     /** Returns the new line character. */

@@ -1,0 +1,268 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+/**
+ * A library of functions for writing text on the screen.
+ * The Hack physical screen consists of 512 rows of 256 pixels each.
+ * The library uses a fixed font, in which each character is displayed 
+ * within a frame which is 11 pixels high (including 1 pixel for inter-line 
+ * spacing) and 8 pixels wide (including 2 pixels for inter-character spacing).
+ * The resulting grid accommodates 23 rows (indexed 0..22, top to bottom)
+ * of 64 characters each (indexed 0..63, left to right). The top left 
+ * character position on the screen is indexed (0,0). A cursor, implemented
+ * as a small filled square, indicates where the next character will be displayed.
+ */
+class Output {
+
+    // Character map for displaying characters
+    static Array charMaps; 
+
+    static int row, col;
+
+    /** Initializes the screen, and locates the cursor at the screen's top-left. */
+    function void init() {
+        let row = 0;
+        let col = 0;
+        do Output.initMap();
+        return;
+    }
+
+    // Initializes the character map array
+    function void initMap() {
+        var int i;
+    
+        let charMaps = Array.new(127);
+        
+        // Black square, used for displaying non-printable characters.
+        do Output.create(0,63,63,63,63,63,63,63,63,63,0,0);
+
+        // Assigns the bitmap for each character in the charachter set.
+        // The first parameter is the character index, the next 11 numbers
+        // are the values of each row in the frame that represents this character.
+        do Output.create(32,0,0,0,0,0,0,0,0,0,0,0);          //
+        do Output.create(33, 3084, 7710, 7710, 7710, 3084, 3084, 0, 3084, 3084, 0, 0);  // !
+        do Output.create(34, 13878, 13878, 5140, 0, 0, 0, 0, 0, 0, 0, 0);       // "
+        do Output.create(35, 0, 4626, 4626, 16191, 4626, 4626, 16191, 4626, 4626, 0, 0);  // #
+        do Output.create(36, 3084, 7710, 13107, 771, 7710, 12336, 13107, 7710, 3084, 3084, 0); // $
+        do Output.create(37, 0, 0, 8995, 13107, 6168, 3084, 1542, 13107, 12593, 0, 0);    // %
+        do Output.create(38, 3084, 7710, 7710, 3084, 13878, 6939, 6939, 6939, 13878, 0, 0); // &
+        do Output.create(39, 3084, 3084, 1542, 0, 0, 0, 0, 0, 0, 0, 0);        // '
+        do Output.create(40, 6168, 3084, 1542, 1542, 1542, 1542, 1542, 3084, 6168, 0, 0);      // (
+        do Output.create(41, 1542, 3084, 6168, 6168, 6168, 6168, 6168, 3084, 1542, 0, 0);   // )
+        do Output.create(42, 0, 0, 0, 13107, 7710, 16191, 7710, 13107, 0, 0, 0);     // *
+        do Output.create(43, 0, 0, 0, 3084, 3084, 16191, 3084, 3084, 0, 0, 0);     // +
+        do Output.create(44, 0, 0, 0, 0, 0, 0, 0, 3084, 3084, 1542, 0);        // ,
+        do Output.create(45, 0, 0, 0, 0, 0, 16191, 0, 0, 0, 0, 0);         // -
+        do Output.create(46, 0, 0, 0, 0, 0, 0, 0, 3084, 3084, 0, 0);        // .    
+        do Output.create(47, 0, 0, 8224, 12336, 6168, 3084, 1542, 771, 257, 0, 0);      // /
+        
+        do Output.create(48, 3084, 7710, 13107, 13107, 13107, 13107, 13107, 7710, 3084, 0, 0); // 0
+        do Output.create(49, 3084, 3598, 3855, 3084, 3084, 3084, 3084, 3084, 16191, 0, 0); // 1
+        do Output.create(50, 7710, 13107, 12336, 6168, 3084, 1542, 771, 13107, 16191, 0, 0);   // 2
+        do Output.create(51, 7710, 13107, 12336, 12336, 7196, 12336, 12336, 13107, 7710, 0, 0); // 3
+        do Output.create(52, 4112, 6168, 7196, 6682, 6425, 16191, 6168, 6168, 15420, 0, 0); // 4
+        do Output.create(53, 16191, 771, 771, 7967, 12336, 12336, 12336, 13107, 7710, 0, 0);   // 5
+        do Output.create(54, 7196, 1542, 771, 771, 7967, 13107, 13107, 13107, 7710, 0, 0);    // 6
+        do Output.create(55, 16191, 12593, 12336, 12336, 6168, 3084, 3084, 3084, 3084, 0, 0); // 7
+        do Output.create(56, 7710, 13107, 13107, 13107, 7710, 13107, 13107, 13107, 7710, 0, 0); // 8
+        do Output.create(57, 7710, 13107, 13107, 13107, 15934, 12336, 12336, 6168, 3598, 0, 0); // 9
+        
+        do Output.create(58, 0, 0, 3084, 3084, 0, 0, 3084, 3084, 0, 0, 0);      // :
+        do Output.create(59, 0, 0, 3084, 3084, 0, 0, 3084, 3084, 1542, 0, 0);      // ;
+        do Output.create(60, 0, 0, 6168, 3084, 1542, 771, 1542, 3084, 6168, 0, 0);      // <
+        do Output.create(61, 0, 0, 0, 16191, 0, 0, 16191, 0, 0, 0, 0);        // =
+        do Output.create(62, 0, 0, 771, 1542, 3084, 6168, 3084, 1542, 771, 0, 0);       // >
+        do Output.create(64, 7710, 13107, 13107, 15163, 15163, 15163, 6939, 771, 7710, 0, 0);  // @
+        do Output.create(63, 7710, 13107, 13107, 6168, 3084, 3084, 0, 3084, 3084, 0, 0);  // ?
+
+        do Output.create(65, 3084, 7710, 16191, 13107, 13107, 16191, 13107, 13107, 13107, 0, 0); // A
+        do Output.create(66, 7967, 13107, 13107, 13107, 7967, 13107, 13107, 13107, 7967, 0, 0); // B
+        do Output.create(67, 7196, 13878, 8995, 771, 771, 771, 8995, 13878, 7196, 0, 0);    // C
+        do Output.create(68, 3855, 6939, 13107, 13107, 13107, 13107, 13107, 6939, 3855, 0, 0); // D
+        do Output.create(69, 16191, 13107, 8995, 2827, 3855, 2827, 8995, 13107, 16191, 0, 0); // E
+        do Output.create(70, 16191, 13107, 8995, 2827, 3855, 2827, 771, 771, 771, 0, 0);    // F
+        do Output.create(71, 7196, 13878, 8995, 771, 15163, 13107, 13107, 13878, 11308, 0, 0);  // G
+        do Output.create(72, 13107, 13107, 13107, 13107, 16191, 13107, 13107, 13107, 13107, 0, 0); // H
+        do Output.create(73, 7710, 3084, 3084, 3084, 3084, 3084, 3084, 3084, 7710, 0, 0); // I
+        do Output.create(74, 15420, 6168, 6168, 6168, 6168, 6168, 6939, 6939, 3598, 0, 0); // J
+        do Output.create(75, 13107, 13107, 13107, 6939, 3855, 6939, 13107, 13107, 13107, 0, 0); // K
+        do Output.create(76, 771, 771, 771, 771, 771, 771, 8995, 13107, 16191, 0, 0);       // L
+        do Output.create(77, 8481, 13107, 16191, 16191, 13107, 13107, 13107, 13107, 13107, 0, 0); // M
+        do Output.create(78, 13107, 13107, 14135, 14135, 16191, 15163, 15163, 13107, 13107, 0, 0); // N
+        do Output.create(79, 7710, 13107, 13107, 13107, 13107, 13107, 13107, 13107, 7710, 0, 0); // O
+        do Output.create(80, 7967, 13107, 13107, 13107, 7967, 771, 771, 771, 771, 0, 0);     // P
+        do Output.create(81, 7710, 13107, 13107, 13107, 13107, 13107, 16191, 15163, 7710, 12336, 0);// Q
+        do Output.create(82, 7967, 13107, 13107, 13107, 7967, 6939, 13107, 13107, 13107, 0, 0); // R
+        do Output.create(83, 7710, 13107, 13107, 1542, 7196, 12336, 13107, 13107, 7710, 0, 0);  // S
+        do Output.create(84, 16191, 16191, 11565, 3084, 3084, 3084, 3084, 3084, 7710, 0, 0); // T
+        do Output.create(85, 13107, 13107, 13107, 13107, 13107, 13107, 13107, 13107, 7710, 0, 0); // U
+        do Output.create(86, 13107, 13107, 13107, 13107, 13107, 7710, 7710, 3084, 3084, 0, 0); // V
+        do Output.create(87, 13107, 13107, 13107, 13107, 13107, 16191, 16191, 16191, 4626, 0, 0); // W
+        do Output.create(88, 13107, 13107, 7710, 7710, 3084, 7710, 7710, 13107, 13107, 0, 0); // X
+        do Output.create(89, 13107, 13107, 13107, 13107, 7710, 3084, 3084, 3084, 7710, 0, 0); // Y
+        do Output.create(90, 16191, 13107, 12593, 6168, 3084, 1542, 8995, 13107, 16191, 0, 0);  // Z
+
+        do Output.create(91, 7710, 1542, 1542, 1542, 1542, 1542, 1542, 1542, 7710, 0, 0);          // [
+        do Output.create(92, 0, 0, 257, 771, 1542, 3084, 6168, 12336, 8224, 0, 0);        // \
+        do Output.create(93, 7710, 6168, 6168, 6168, 6168, 6168, 6168, 6168, 7710, 0, 0);   // ]
+        do Output.create(94, 2056, 7196, 13878, 0, 0, 0, 0, 0, 0, 0, 0);          // ^
+        do Output.create(95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16191, 0);           // _
+        do Output.create(96, 1542, 3084, 6168, 0, 0, 0, 0, 0, 0, 0, 0);          // `
+
+        do Output.create(97, 0, 0, 0, 3598, 6168, 7710, 6939, 6939, 13878, 0, 0);      // a
+        do Output.create(98, 771, 771, 771, 3855, 6939, 13107, 13107, 13107, 7710, 0, 0);      // b
+        do Output.create(99, 0, 0, 0, 7710, 13107, 771, 771, 13107, 7710, 0, 0);        // c
+        do Output.create(100, 12336, 12336, 12336, 15420, 13878, 13107, 13107, 13107, 7710, 0, 0);  // d
+        do Output.create(101, 0, 0, 0, 7710, 13107, 16191, 771, 13107, 7710, 0, 0);      // e
+        do Output.create(102, 7196, 13878, 9766, 1542, 3855, 1542, 1542, 1542, 3855, 0, 0);      // f
+        do Output.create(103, 0, 0, 7710, 13107, 13107, 13107, 15934, 12336, 13107, 7710, 0);   // g
+        do Output.create(104, 771, 771, 771, 6939, 14135, 13107, 13107, 13107, 13107, 0, 0);     // h
+        do Output.create(105, 3084, 3084, 0, 3598, 3084, 3084, 3084, 3084, 7710, 0, 0);   // i
+        do Output.create(106, 12336, 12336, 0, 14392, 12336, 12336, 12336, 12336, 13107, 7710, 0);  // j
+        do Output.create(107, 771, 771, 771, 13107, 6939, 3855, 3855, 6939, 13107, 0, 0);     // k
+        do Output.create(108, 3598, 3084, 3084, 3084, 3084, 3084, 3084, 3084, 7710, 0, 0);  // l
+        do Output.create(109, 0, 0, 0, 7453, 16191, 11051, 11051, 11051, 11051, 0, 0);     // m
+        do Output.create(110, 0, 0, 0, 7453, 13107, 13107, 13107, 13107, 13107, 0, 0);     // n
+        do Output.create(111, 0, 0, 0, 7710, 13107, 13107, 13107, 13107, 7710, 0, 0);     // o
+        do Output.create(112, 0, 0, 0, 7710, 13107, 13107, 13107, 7967, 771, 771, 0);      // p
+        do Output.create(113, 0, 0, 0, 7710, 13107, 13107, 13107, 15934, 12336, 12336, 0);    // q
+        do Output.create(114, 0, 0, 0, 7453, 14135, 13107, 771, 771, 1799, 0, 0);        // r
+        do Output.create(115, 0, 0, 0, 7710, 13107, 1542, 6168, 13107, 7710, 0, 0);      // s
+        do Output.create(116, 1028, 1542, 1542, 3855, 1542, 1542, 1542, 13878, 7196, 0, 0);        // t
+        do Output.create(117, 0, 0, 0, 6939, 6939, 6939, 6939, 6939, 13878, 0, 0);     // u
+        do Output.create(118, 0, 0, 0, 13107, 13107, 13107, 13107, 7710, 3084, 0, 0);     // v
+        do Output.create(119, 0, 0, 0, 13107, 13107, 13107, 16191, 16191, 4626, 0, 0);     // w
+        do Output.create(120, 0, 0, 0, 13107, 7710, 3084, 3084, 7710, 13107, 0, 0);     // x
+        do Output.create(121, 0, 0, 0, 13107, 13107, 13107, 15934, 12336, 6168, 3855, 0);    // y
+        do Output.create(122, 0, 0, 0, 16191, 6939, 3084, 1542, 13107, 16191, 0, 0);      // z
+        
+        do Output.create(123, 14392, 3084, 3084, 3084, 1799, 3084, 3084, 3084, 14392, 0, 0);   // {
+        do Output.create(124, 3084, 3084, 3084, 3084, 3084, 3084, 3084, 3084, 3084, 0, 0);  // |
+        do Output.create(125, 1799, 3084, 3084, 3084, 14392, 3084, 3084, 3084, 1799, 0, 0);    // }
+        do Output.create(126, 9766, 11565, 6425, 0, 0, 0, 0, 0, 0, 0, 0);        // ~
+
+	return;
+    }
+
+    // Creates the character map array of the given character index, using the given values.
+    function void create(int index, int a, int b, int c, int d, int e,
+                         int f, int g, int h, int i, int j, int k) {
+	var Array map;
+
+	let map = Array.new(11);
+        let charMaps[index] = map;
+
+        let map[0] = a;
+        let map[1] = b;
+        let map[2] = c;
+        let map[3] = d;
+        let map[4] = e;
+        let map[5] = f;
+        let map[6] = g;
+        let map[7] = h;
+        let map[8] = i;
+        let map[9] = j;
+        let map[10] = k;
+
+        return;
+    }
+    
+    // Returns the character map (array of size 11) of the given character.
+    // If the given character is invalid or non-printable, returns the
+    // character map of a black square.
+    function Array getMap(char c) {
+        if ((c < 32) | (c > 126)) {
+            let c = 0;
+        }
+        return charMaps[c];
+    }
+
+    /** Moves the cursor to the j-th column of the i-th row,
+     *  and erases the character displayed there. */
+    function void moveCursor(int i, int j) {
+        let row = i;
+        let col = j;
+        return;
+    }
+
+    /** Displays the given character at the cursor location,
+     *  and advances the cursor one column forward. */
+    function void printChar(char c) {
+        var int address;
+        var int i;
+        var Array charArray;
+        var int charPixels;
+        var int prev;
+        var int colDiv2;
+        var boolean isEven;
+
+        let charArray = Output.getMap(c);
+        let colDiv2 = col / 2;
+        let isEven = (colDiv2 * 2) = col;
+        // 352 = 11 rows/char * 32 16 bit pixel groups per row.
+        let address = 16384 + (row * 352) + colDiv2;
+        let i = 0;
+        while (i < 11) {
+            if (isEven) {
+                do Memory.poke(address, charArray[i] & 255);
+            } else {
+                let prev = Memory.peek(address) & 255;
+                let charPixels = charArray[i] & -256;
+                do Memory.poke(address, prev | charPixels);
+            }
+            let i = i + 1;
+            let address = address + 32;
+        }
+        let col = col + 1;
+        if (col = 64) {
+            let col = 0;
+            let row = row + 1;
+        }
+        if (row = 23) {
+            let row = 0;
+        }
+        return;
+    }
+
+    /** displays the given string starting at the cursor location,
+     *  and advances the cursor appropriately. */
+    function void printString(String s) {
+        var int i;
+        let i = 0;
+        while (i < s.length()) {
+            do Output.printChar(s.charAt(i));
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Displays the given integer starting at the cursor location,
+     *  and advances the cursor appropriately. */
+    function void printInt(int i) {
+        var String s;
+        let s = String.new(6);
+        do s.setInt(i);
+        do Output.printString(s);
+        do s.dispose();
+        return;
+    }
+
+    /** Advances the cursor to the beginning of the next line. */
+    function void println() {
+        let row = row + 1;
+        if (row = 23) {
+            let row = 0;
+        }
+        let col = 0;
+        return;
+    }
+
+    /** Moves the cursor one column back. */
+    function void backSpace() {
+        // The built-in version draws a cursor over the deleted character.
+        if (col > 0) {
+            let col = col - 1;
+        }
+        return;
+    }
+}

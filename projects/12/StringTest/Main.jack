@@ -5,8 +5,75 @@
 /** Test program for the OS String class. */
 class Main {
 
-    /** Performs various string manipulations and displays their results. */
     function void main() {
+        var String s, i;
+
+        do Main.main2();
+        return;
+        let i = String.new(10);
+        do Output.printInt(456);
+        do Output.println();
+        do Output.printString("setInt.PrintValue: ");
+        do i.setInt(456);
+        do Output.printString(i);
+        do Output.printString("XXX");
+        do Output.printString("intValue: ");
+        do Output.printInt(i.intValue());
+        do Output.printString("XXX");
+        do Output.println();
+        do Output.printInt(i.intValue());
+        do Output.println();
+
+        do Output.printInt(7);
+        do Output.println();
+        do Output.printInt(56);
+        do Output.println();
+        do Output.printInt(123);
+        do Output.println();
+        do Output.printInt(-123);
+        do Output.println();
+
+        do i.setInt(0);
+        do Output.printString(i);
+        do Output.printString("XXX");
+        do Output.println();
+        do i.setInt(7);
+        do Output.printString(i);
+        do Output.printString("XXX");
+
+        do i.setInt(56);
+        do Output.printString(i);
+        do Output.printString("XXX");
+        do Output.println();
+        do i.setInt(123);
+        do Output.printString(i);
+        do Output.printString("XXX");
+        do Output.println();
+        do i.setInt(-123);
+        do Output.printString(i);
+        do Output.printString("XXX");
+        do Output.println();
+
+/*      
+let s = String.new(10);
+let s = s.appendChar(88);
+        do Output.printString(s);
+        do Output.println();
+        let s = s.appendChar(89);
+        do Output.printString(s);
+        do Output.println();
+        let s = s.appendChar(90);
+        do Output.printString(s);
+        do Output.println();
+
+        do Output.printString("abc");
+        do Output.println();
+        do Output.printString("abc");
+        do Output.println();*/
+        return;
+    }
+    /** Performs various string manipulations and displays their results. */
+    function void main2() {
         var String s;
         var String i;
         

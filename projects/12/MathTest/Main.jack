@@ -8,6 +8,9 @@ class Main {
     // Performs various mathematical operations, using calls to the Math class methods.
     function void main() {
         var Array r;    // Stores the test results;  
+        do Output.printString("Hello, World!");
+        do Output.println();
+
         let r = 8000;   // Base address
     
         let r[0] = 2 * 3;                  // 6
