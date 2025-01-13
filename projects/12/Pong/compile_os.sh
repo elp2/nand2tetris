@@ -1,6 +1,7 @@
 cp ../ArrayTest/Array.jack .
+cp ../ArrayTest/Array.jack ../MemoryTest
 cp ../KeyboardTest/Keyboard.jack .
-cp ../MathTest/Math.jack .
+cp ../MathTest/Math.jack .  
 cp ../MemoryTest/Memory.jack ../MemoryTest/MemoryDiag/Memory.jack
 cp ../MemoryTest/Memory.jack .
 cp ../OutputTest/Output.jack .
