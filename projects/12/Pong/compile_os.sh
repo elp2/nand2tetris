@@ -1,0 +1,9 @@
+cp ../ArrayTest/Array.jack .
+cp ../KeyboardTest/Keyboard.jack .
+cp ../MathTest/Math.jack .
+cp ../MemoryTest/Memory.jack ../MemoryTest/MemoryDiag/Memory.jack
+cp ../MemoryTest/Memory.jack .
+cp ../OutputTest/Output.jack .
+cp ../ScreenTest/Screen.jack .
+cp ../StringTest/String.jack .
+cp ../SysTest/Sys.jack .

@@ -1,2 +1,4 @@
 projects/9/ElpGame/*.vm
+projects/12/**/*.vm
 **/.vscode/**
+.DS_Store
